@@ -2,7 +2,6 @@
 import json
 from fastapi import Request
 from vllm.entrypoints.openai.protocol import CompletionRequest, ChatCompletionRequest
-from vllm.entrypoints.openai.api_server import create_completion, create_chat_completion
 from vllm.kalypso.pin_registry import PinnedRequestRegistry
 
 from .executor import LLMExecutor, CompletionResult
@@ -92,6 +91,8 @@ class VLLMExecutor(LLMExecutor):
             f"prompt_items={prompt_items}"
         )
 
+        from vllm.entrypoints.openai.api_server import create_chat_completion
+
         gen = await create_chat_completion(
             request=req,
             raw_request=raw_request,
@@ -145,6 +146,8 @@ class VLLMExecutor(LLMExecutor):
             f"priority={priority} "
             f"prompt_len={prompt_len}"
         )
+
+        from vllm.entrypoints.openai.api_server import create_completion
 
         gen = await create_completion(
             request=req,

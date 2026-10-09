@@ -62,14 +62,18 @@ ready() {
     die "Readiness failed (timeout ${timeout}s or process exited): $url"
 }
 for ((i=1; i<=n; i++)); do
+    started=$SECONDS
     VLLM_ENABLE_V1_MULTIPROCESSING=0 VLLM_CPU_KVCACHE_SPACE=${KV_GIB:-1} OMP_NUM_THREADS=$threads nohup "$vllm" serve "$model" --enable-prefix-caching --max-model-len 4096 --port "$((base+i))" > "$out/worker_$i.log" 2>&1 < /dev/null &
     pids+=("$!")
+    ready "http://localhost:$((base+i))/v1/models" "${WORKER_READY_TIMEOUT:-900}" "$out/worker_$i.log" "${pids[i-1]}"
+    echo "Worker $i ready after $((SECONDS - started))s"
 done
-for ((i=1; i<=n; i++)); do ready "http://localhost:$((base+i))/v1/models" 600 "$out/worker_$i.log" "${pids[i-1]}"; done
 "$python" -c 'import json,sys; json.dump({"workers": [{"url": f"http://localhost:{int(sys.argv[1])+i}"} for i in range(1,int(sys.argv[2])+1)]}, sys.stdout)' "$base" "$n" > "$out/workers.json"
-nohup "$python" -m vllm.kalypso.coordinator --workers-config "$out/workers.json" --policy "$policy" --port "$coord" --trace-dir "$out/trace" "$@" > "$out/coordinator.log" 2>&1 < /dev/null &
+started=$SECONDS
+PYTHONUNBUFFERED=1 nohup "$python" -m vllm.kalypso.coordinator --workers-config "$out/workers.json" --policy "$policy" --port "$coord" --trace-dir "$out/trace" "$@" > "$out/coordinator.log" 2>&1 < /dev/null &
 pids+=("$!")
-ready "http://localhost:$coord/v1/semantic/healthz" 300 "$out/coordinator.log" "$!"
+ready "http://localhost:$coord/v1/semantic/healthz" "${COORD_READY_TIMEOUT:-600}" "$out/coordinator.log" "$!"
+echo "Coordinator ready after $((SECONDS - started))s"
 echo "http://localhost:$coord/v1/semantic/query"
 if ((detach)); then
     printf '%s\n' "${pids[@]}" > "$out/pids"

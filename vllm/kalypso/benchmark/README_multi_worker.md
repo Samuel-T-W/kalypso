@@ -15,4 +15,4 @@ Use `-m MODEL`, `-p POLICY`, `-b BASE_PORT`, `-c COORD_PORT`, and `-o OUT_DIR` t
 Defaults are Qwen/Qwen2.5-0.5B-Instruct, round_robin, workers on 8101 onward, coordinator on 8100, and `./kalypso_run` for logs/config/traces.
 `KALYPSO_COIN_FLIP_SEED` is inherited by workers and coordinator for reproducible coin-flip testing.
 Each CPU worker needs about 1 GB for weights plus `KV_GIB` GiB for KV cache; four workers fit on a 16 GB laptop with `KV_GIB=1`.
-The first launch may download model weights; readiness allows 600 seconds per worker and 300 seconds for the coordinator.
+The first launch may download model weights; workers start sequentially with `WORKER_READY_TIMEOUT` (default 900 seconds per worker) and `COORD_READY_TIMEOUT` (default 600 seconds for the coordinator).

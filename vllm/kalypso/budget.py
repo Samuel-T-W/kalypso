@@ -64,6 +64,9 @@ class KVMemoryManager:
 
         self._capacity = kv_capacity 
         self._global_used = 0
+        self._worker_capacity: list[float] = [kv_capacity]
+        self._worker_used: list[float] = [0]
+        self._worker_inflight: list[int] = [0]
 
         self._stage_capacity = {}
         self._stage_min_capacity = {}
@@ -72,6 +75,32 @@ class KVMemoryManager:
         self._stage_inflight = {}
 
         self._cond = asyncio.Condition()
+
+    def register_workers(self, capacities: list[int]) -> None:
+        """Set worker budgets before any stage is registered."""
+        if not capacities:
+            raise ValueError("Worker capacities must not be empty")
+        self._worker_capacity = list(capacities)
+        self._worker_used = [0] * len(capacities)
+        self._worker_inflight = [0] * len(capacities)
+        self._capacity = sum(capacities)
+
+    def num_workers(self) -> int:
+        return len(self._worker_capacity)
+
+    def worker_usage(self, worker_id: int) -> tuple[int, int]:
+        return int(self._worker_used[worker_id]), int(self._worker_capacity[worker_id])
+
+    def worker_inflight(self, worker_id: int) -> int:
+        return self._worker_inflight[worker_id]
+
+    def most_free_worker(self) -> int:
+        return max(
+            range(self.num_workers()),
+            key=lambda worker_id: (
+                self._worker_capacity[worker_id] - self._worker_used[worker_id]
+            ),
+        )
 
     # Stage API (Pipeline)
     def register_stage(
@@ -202,26 +231,38 @@ class KVMemoryManager:
             self._cond.notify_all()
             return True
 
-    async def can_admit_stage(self, stage_id: int, budget: int):
+    async def can_admit_stage(
+        self, stage_id: int, budget: int, worker_id: int = 0
+    ) -> bool:
         async with self._cond:
             return (
                 self._stage_used[stage_id] + budget
                 <= self._stage_capacity[stage_id]
+                and self._worker_used[worker_id] + budget
+                <= self._worker_capacity[worker_id]
             )
 
-    async def try_allocate_stage(self, stage_id: int, budget: int) -> bool:
+    async def try_allocate_stage(
+        self, stage_id: int, budget: int, worker_id: int = 0
+    ) -> bool:
         async with self._cond:
             if (
                 self._stage_used[stage_id] + budget
                 > self._stage_capacity[stage_id]
+                or self._worker_used[worker_id] + budget
+                > self._worker_capacity[worker_id]
             ):
                 return False
 
             self._stage_used[stage_id] += budget
             self._stage_inflight[stage_id] += 1
+            self._worker_used[worker_id] += budget
+            self._worker_inflight[worker_id] += 1
             return True
 
-    async def allocate_stage(self, stage_id: int, budget: int):
+    async def allocate_stage(
+        self, stage_id: int, budget: int, worker_id: int = 0
+    ) -> None:
         if KVMemoryManager.LOG:
             used, cap = self.stage_usage(stage_id)
             print("stage", stage_id, "inflight", self.stage_inflight(stage_id), "used", used, "cap", cap, "budget", budget)
@@ -230,13 +271,19 @@ class KVMemoryManager:
             while (
                 self._stage_used[stage_id] + budget
                 > self._stage_capacity[stage_id]
+                or self._worker_used[worker_id] + budget
+                > self._worker_capacity[worker_id]
             ):
                 await self._cond.wait()
 
             self._stage_used[stage_id] += budget
             self._stage_inflight[stage_id] += 1
+            self._worker_used[worker_id] += budget
+            self._worker_inflight[worker_id] += 1
 
-    async def force_allocate_stage(self, stage_id: int, budget: int):
+    async def force_allocate_stage(
+        self, stage_id: int, budget: int, worker_id: int = 0
+    ) -> None:
         if KVMemoryManager.LOG:
             used, cap = self.stage_usage(stage_id)
             print(
@@ -255,8 +302,12 @@ class KVMemoryManager:
         async with self._cond:
             self._stage_used[stage_id] += budget
             self._stage_inflight[stage_id] += 1
+            self._worker_used[worker_id] += budget
+            self._worker_inflight[worker_id] += 1
 
-    async def release_stage(self, stage_id: int, budget: int):
+    async def release_stage(
+        self, stage_id: int, budget: int, worker_id: int = 0
+    ) -> None:
         if KVMemoryManager.LOG:
             used, cap = self.stage_usage(stage_id)
             print("stage", stage_id, "inflight", self.stage_inflight(stage_id), "used", used, "cap", cap, "budget", budget)
@@ -268,6 +319,10 @@ class KVMemoryManager:
             self._stage_inflight[stage_id] -= 1
             if self._stage_inflight[stage_id] < 0:
                 self._stage_inflight[stage_id] = 0
+            self._worker_used[worker_id] = max(0, self._worker_used[worker_id] - budget)
+            self._worker_inflight[worker_id] = max(
+                0, self._worker_inflight[worker_id] - 1
+            )
 
             self._cond.notify_all()
 

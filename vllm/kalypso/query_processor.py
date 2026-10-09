@@ -28,6 +28,9 @@ class QueryProcessor:
         self.model_name = model_name
         self.virtual_pinning = virtual_pinning
         KVMemoryManager.init(model_name, pool.total_kv_budget())
+        KVMemoryManager.get_instance().register_workers(
+            [w.kv_budget for w in pool.workers]
+        )
         self.pool = pool
         self.executor = pool
         self._stuck_monitor_task = None

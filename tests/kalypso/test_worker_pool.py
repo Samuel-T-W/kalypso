@@ -16,6 +16,96 @@ from vllm.kalypso.query import Query
 from vllm.kalypso.query_processor import QueryProcessor
 
 
+@pytest.fixture
+def three_workers():
+    return [
+        Worker(i, str(i), 100, AsyncMock(execute=AsyncMock(return_value=i)))
+        for i in range(3)
+    ]
+
+
+def test_round_robin_candidates_and_affinity(three_workers):
+    pool = WorkerPool(three_workers, "model")
+    manager = Mock(num_workers=Mock(return_value=3))
+    orders = [pool.candidate_workers(None, manager) for _ in range(6)]
+    assert orders == [
+        [0, 1, 2],
+        [1, 2, 0],
+        [2, 0, 1],
+        [0, 1, 2],
+        [1, 2, 0],
+        [2, 0, 1],
+    ]
+    assert pool.candidate_workers(None, manager) == [0, 1, 2]
+    assert pool.candidate_workers(0, manager) == [0, 1, 2]
+    assert pool.candidate_workers(2, manager) == [2, 1, 0]
+    assert pool.candidate_workers(None, manager) == [1, 2, 0]
+
+
+@pytest.mark.parametrize(
+    "counts,expected", [([3, 1, 2], [1, 2, 0]), ([1, 1, 1], [0, 1, 2])]
+)
+def test_least_outstanding_candidates(three_workers, counts, expected):
+    pool = WorkerPool(three_workers, "model", policy="least_outstanding")
+    manager = Mock(
+        num_workers=Mock(return_value=3),
+        worker_inflight=Mock(side_effect=lambda worker_id: counts[worker_id]),
+    )
+    assert pool.candidate_workers(None, manager) == expected
+    for preferred in range(3):
+        candidates = pool.candidate_workers(preferred, manager)
+        assert candidates[0] == preferred
+        assert sorted(candidates) == [0, 1, 2]
+    assert pool.candidate_workers(0, manager) == [0, 1, 2]
+    counts[:] = [2, 3, 1]
+    assert pool.candidate_workers(None, manager) == [2, 0, 1]
+
+
+def test_invalid_policy(three_workers):
+    with pytest.raises(ValueError, match="unknown"):
+        WorkerPool(three_workers, "model", policy="unknown")
+
+
+def test_round_robin_execute_uses_separate_cursor(three_workers):
+    pool = WorkerPool(three_workers, "model")
+    manager = Mock(num_workers=Mock(return_value=3))
+    assert pool.candidate_workers(None, manager) == [0, 1, 2]
+
+    async def run():
+        return [
+            await pool.execute(None, "hello", 8, pin=False, priority=7)
+            for _ in range(6)
+        ]
+
+    assert asyncio.run(run()) == [0, 1, 2, 0, 1, 2]
+    assert pool.candidate_workers(None, manager) == [1, 2, 0]
+    for worker in three_workers:
+        assert worker.completed == 2
+        assert worker.outstanding == 0
+        worker.client.execute.assert_awaited_with(None, "hello", 8, False, 7, None)
+
+
+@pytest.mark.parametrize("counts,expected", [([3, 1, 2], 1), ([1, 1, 1], 0)])
+def test_least_outstanding_execute(three_workers, counts, expected):
+    pool = WorkerPool(three_workers, "model", policy="least_outstanding")
+    for worker, count in zip(three_workers, counts):
+        worker.outstanding = count
+    assert asyncio.run(pool.execute(None, "hello", 8, False, 7)) == expected
+    for worker, count in zip(three_workers, counts):
+        assert worker.outstanding == count
+        assert worker.completed == int(worker.worker_id == expected)
+
+
+def test_local_passes_policy(monkeypatch):
+    worker = Worker(0, "local", 100, AsyncMock())
+    monkeypatch.setattr(
+        "vllm.kalypso.execution.worker_pool.LocalWorker", Mock(return_value=worker)
+    )
+    pool = WorkerPool.local("model", 100, policy="least_outstanding")
+    assert pool.policy == "least_outstanding"
+    assert pool.workers == [worker]
+
+
 @pytest.mark.parametrize("injected,budget", [(False, 100), (True, None), (True, 999)])
 def test_query_rows_call_worker_pool(tmp_path, monkeypatch, injected, budget):
     init = Mock()
@@ -131,7 +221,8 @@ def test_config_discovery(tmp_path, case):
                 if case == "mismatch":
                     assert f"{base}/1" in str(caught.value)
             else:
-                pool = await WorkerPool.from_config(path)
+                pool = await WorkerPool.from_config(path, policy="least_outstanding")
+                assert pool.policy == "least_outstanding"
                 assert [w.kv_budget for w in pool.workers] == [100, 123]
                 assert pool.total_kv_budget() == 223
                 await pool.close()

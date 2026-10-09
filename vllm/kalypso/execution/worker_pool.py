@@ -77,9 +77,20 @@ class RemoteWorker(Worker):
 class WorkerPool(LLMExecutor):
     """An ordered collection of workers serving one model."""
 
-    def __init__(self, workers: list[Worker], model: str):
+    POLICIES = ("round_robin", "least_outstanding")
+
+    def __init__(
+        self, workers: list[Worker], model: str, policy: str = "round_robin"
+    ):
+        if policy not in self.POLICIES:
+            raise ValueError(
+                f"Unknown worker policy {policy!r}; expected {self.POLICIES}"
+            )
         self.workers = workers
         self.model = model
+        self.policy = policy
+        self._admission_cursor = 0
+        self._execute_cursor = 0
 
     def __len__(self) -> int:
         return len(self.workers)
@@ -88,11 +99,22 @@ class WorkerPool(LLMExecutor):
         return self.workers[worker_id]
 
     def candidate_workers(self, preferred: int | None, manager: Any) -> list[int]:
-        candidates = [
-            worker_id for worker_id in range(manager.num_workers())
-            if worker_id != preferred
-        ]
+        num_workers = manager.num_workers()
+        if self.policy == "round_robin":
+            candidates = [
+                (self._admission_cursor + offset) % num_workers
+                for offset in range(num_workers)
+            ]
+            if preferred is None:
+                self._admission_cursor = (self._admission_cursor + 1) % num_workers
+        else:
+            # Admission can admit a burst before any HTTP calls start. Count
+            # admitted rows, since call counts would be zero and favor worker 0.
+            candidates = sorted(
+                range(num_workers), key=lambda w: (manager.worker_inflight(w), w)
+            )
         if preferred is not None:
+            candidates.remove(preferred)
             candidates.insert(0, preferred)
         return candidates
 
@@ -100,7 +122,12 @@ class WorkerPool(LLMExecutor):
         return sum(worker.kv_budget for worker in self.workers)
 
     async def execute(self, *args: Any, **kwargs: Any) -> CompletionResult:
-        return await self.workers[0].execute(*args, **kwargs)
+        if self.policy == "round_robin":
+            worker = self.workers[self._execute_cursor]
+            self._execute_cursor = (self._execute_cursor + 1) % len(self.workers)
+        else:
+            worker = min(self.workers, key=lambda w: (w.outstanding, w.worker_id))
+        return await worker.execute(*args, **kwargs)
 
     async def complete(self, *args: Any, **kwargs: Any) -> CompletionResult:
         return await self.workers[0].complete(*args, **kwargs)
@@ -121,7 +148,10 @@ class WorkerPool(LLMExecutor):
 
     @classmethod
     async def from_config(
-        cls, path: str | Path, kv_fraction: float = 0.5
+        cls,
+        path: str | Path,
+        kv_fraction: float = 0.5,
+        policy: str = "round_robin",
     ) -> "WorkerPool":
         entries = json.loads(Path(path).read_text()).get("workers", [])
         if not entries or any(not entry.get("url") for entry in entries):
@@ -161,8 +191,10 @@ class WorkerPool(LLMExecutor):
                     )
                 model = worker_model
                 workers.append(RemoteWorker(index, url, model, budget))
-        return cls(workers, model)
+        return cls(workers, model, policy=policy)
 
     @classmethod
-    def local(cls, model: str, kv_budget: int) -> "WorkerPool":
-        return cls([LocalWorker(0, model, kv_budget)], model)
+    def local(
+        cls, model: str, kv_budget: int, policy: str = "round_robin"
+    ) -> "WorkerPool":
+        return cls([LocalWorker(0, model, kv_budget)], model, policy=policy)

@@ -39,6 +39,7 @@ class ExecutionState:
     raw_request: Any = None
     pin_req_id: Any = None
     executor: LLMExecutor = None
+    worker_id: int | None = None
     predicate: bool = True
     helper_score: float | None = None
     idx: int = -1

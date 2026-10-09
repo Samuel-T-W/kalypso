@@ -59,6 +59,7 @@ class QueryProcessor:
 
  
     async def execute(self, raw_request, query: Query):
+        KVMemoryManager.get_instance().reset_workers()
         plan = SemanticPlan(self.executor, virtual_pinning=self.virtual_pinning)
         owner_key = str(id(raw_request))
         try:

@@ -115,3 +115,28 @@ def test_register_workers_replaces_lists_and_rejects_empty(manager):
     with pytest.raises(ValueError, match="empty"):
         manager.register_workers([])
     assert manager.capacity() == 150
+
+
+
+def test_oversized_row_runs_only_on_idle_worker(manager):
+    async def run():
+        manager.register_workers([10, 10])
+        manager.register_stage(1, 1.0)
+        assert await manager.try_allocate_stage(1, 15, 0)
+        assert not await manager.try_allocate_stage(1, 1, 0)
+        assert not await manager.try_allocate_stage(1, 15, 0)
+        assert await manager.try_allocate_stage(1, 1, 1)
+
+    asyncio.run(run())
+
+
+def test_reset_workers_clears_leaked_usage(manager):
+    async def run():
+        manager.register_workers([10, 10])
+        manager.register_stage(1, 1.0)
+        assert await manager.try_allocate_stage(1, 8, 1)
+        manager.reset_workers()
+        assert manager.worker_usage(1) == (0, 10)
+        assert manager.worker_inflight(1) == 0
+
+    asyncio.run(run())

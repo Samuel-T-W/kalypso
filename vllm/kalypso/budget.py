@@ -85,6 +85,22 @@ class KVMemoryManager:
         self._worker_inflight = [0] * len(capacities)
         self._capacity = sum(capacities)
 
+    def reset_workers(self) -> None:
+        """Clear worker usage at the start of a query.
+
+        Stage ledgers are rebuilt per plan, but worker ledgers live as long as
+        the process, so a query that ends in an exception must not leave
+        reservations charged to its workers.
+        """
+        self._worker_used = [0] * len(self._worker_capacity)
+        self._worker_inflight = [0] * len(self._worker_capacity)
+
+    def _worker_fits(self, worker_id: int, budget: int) -> bool:
+        # A row larger than a whole worker can only run on an idle worker,
+        # so it does not block its stage forever.
+        capacity = self._worker_capacity[worker_id]
+        return self._worker_used[worker_id] + min(budget, capacity) <= capacity
+
     def num_workers(self) -> int:
         return len(self._worker_capacity)
 
@@ -238,8 +254,7 @@ class KVMemoryManager:
             return (
                 self._stage_used[stage_id] + budget
                 <= self._stage_capacity[stage_id]
-                and self._worker_used[worker_id] + budget
-                <= self._worker_capacity[worker_id]
+                and self._worker_fits(worker_id, budget)
             )
 
     async def try_allocate_stage(
@@ -249,8 +264,7 @@ class KVMemoryManager:
             if (
                 self._stage_used[stage_id] + budget
                 > self._stage_capacity[stage_id]
-                or self._worker_used[worker_id] + budget
-                > self._worker_capacity[worker_id]
+                or not self._worker_fits(worker_id, budget)
             ):
                 return False
 
@@ -271,8 +285,7 @@ class KVMemoryManager:
             while (
                 self._stage_used[stage_id] + budget
                 > self._stage_capacity[stage_id]
-                or self._worker_used[worker_id] + budget
-                > self._worker_capacity[worker_id]
+                or not self._worker_fits(worker_id, budget)
             ):
                 await self._cond.wait()
 

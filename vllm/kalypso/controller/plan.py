@@ -5,6 +5,7 @@ from vllm.kalypso.query import Query
 from vllm.kalypso.data import data
 from vllm.kalypso.budget import KVMemoryManager
 from vllm.kalypso.execution.pipeline_execution import PlanExecutor
+from vllm.kalypso.execution.worker_pool import WorkerPool
 from vllm.kalypso.controller.map_estimator import MapRatioEstimator
 from .stage import Stage, Task, stage_builder
 
@@ -13,7 +14,9 @@ class SemanticPlan:
 
     def __init__(self, executor, virtual_pinning: bool = True):
         self.executor = executor
-        self.plan_executor = PlanExecutor()
+        self.plan_executor = PlanExecutor(
+            pool=executor if isinstance(executor, WorkerPool) else None
+        )
         self.virtual_pinning = virtual_pinning
 
 

@@ -5,7 +5,7 @@ from time import monotonic
 from vllm.kalypso.budget import KVMemoryManager
 from vllm.kalypso.query import Query
 from vllm.kalypso.controller import SemanticPlan
-from vllm.kalypso.execution.vllm_executor import VLLMExecutor
+from vllm.kalypso.execution.worker_pool import WorkerPool
 from vllm.kalypso.pin_registry import PinnedRequestRegistry
 
 
@@ -14,11 +14,22 @@ class QueryProcessor:
     STUCK_CONFIRMATION_COUNT = 2
     UNPIN_COOLDOWN_SEC = 10.0
 
-    def __init__(self, model_name, budget, virtual_pinning: bool = True):
+    def __init__(
+        self,
+        model_name,
+        budget=None,
+        virtual_pinning: bool = True,
+        pool: WorkerPool | None = None,
+    ):
+        if pool is None:
+            if budget is None:
+                raise ValueError("budget is required when pool is not provided")
+            pool = WorkerPool.local(model_name, budget)
         self.model_name = model_name
         self.virtual_pinning = virtual_pinning
-        KVMemoryManager.init(model_name, budget)
-        self.executor = VLLMExecutor(model=model_name)
+        KVMemoryManager.init(model_name, pool.total_kv_budget())
+        self.pool = pool
+        self.executor = pool
         self._stuck_monitor_task = None
         self._last_unpin_at = 0.0
         self._consecutive_stuck_checks = 0

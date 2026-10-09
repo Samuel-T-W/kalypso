@@ -2,13 +2,80 @@
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
 import asyncio
 import json
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestServer
 
-from vllm.kalypso.execution.worker_pool import Worker, WorkerPool
+from vllm.kalypso.budget import KVMemoryManager
+from vllm.kalypso.controller.plan import SemanticPlan
+from vllm.kalypso.execution.executor import CompletionResult
+from vllm.kalypso.execution.worker_pool import LocalWorker, Worker, WorkerPool
+from vllm.kalypso.query import Query
+from vllm.kalypso.query_processor import QueryProcessor
+
+
+@pytest.mark.parametrize("injected,budget", [(False, 100), (True, None), (True, 999)])
+def test_query_rows_call_worker_pool(tmp_path, monkeypatch, injected, budget):
+    init = Mock()
+    monkeypatch.setattr(KVMemoryManager, "init", init)
+    monkeypatch.setattr(
+        KVMemoryManager, "get_instance", Mock(return_value=Mock(token_length=len))
+    )
+    if injected:
+        pool = WorkerPool(
+            [
+                Worker(0, "first", 100, AsyncMock()),
+                Worker(1, "second", 123, AsyncMock()),
+            ],
+            "model",
+        )
+        processor = QueryProcessor("model", budget=budget, pool=pool)
+        init.assert_called_once_with("model", 223)
+    else:
+        processor = QueryProcessor("model", budget=budget)
+        pool = processor.pool
+        assert len(pool) == 1
+        assert isinstance(pool.worker(0), LocalWorker)
+        init.assert_called_once_with("model", 100)
+
+    client = pool.worker(0).client
+    client.execute = AsyncMock(
+        return_value=CompletionResult("hello back", "request-1", "stop")
+    )
+    assert processor.executor is pool
+    plan = SemanticPlan(processor.executor)
+    assert plan.plan_executor.pipeline_executor.pool is pool
+    path = tmp_path / "rows.csv"
+    path.write_text("data\nhello\n")
+    raw_request = object()
+    rows = asyncio.run(processor.execute(raw_request, Query([], str(path))))
+    assert len(rows) == 1
+    assert rows[0].state.executor is pool
+    result = asyncio.run(
+        rows[0].state.executor.execute(raw_request, "hello", 8, False, 7)
+    )
+    assert (result.text, result.request_id, result.finish_reason) == (
+        "hello back",
+        "request-1",
+        "stop",
+    )
+    client.execute.assert_awaited_once_with(raw_request, "hello", 8, False, 7)
+    assert (pool.worker(0).outstanding, pool.worker(0).completed) == (0, 1)
+    if injected:
+        pool.worker(1).client.execute.assert_not_awaited()
+
+
+def test_query_processor_requires_budget_without_pool():
+    with pytest.raises(ValueError, match="budget is required"):
+        QueryProcessor("model")
+
+
+def test_plan_accepts_executor_without_pool(monkeypatch):
+    monkeypatch.setattr(KVMemoryManager, "get_instance", Mock())
+    plan = SemanticPlan(AsyncMock())
+    assert plan.plan_executor.pipeline_executor.pool is None
 
 
 @pytest.mark.parametrize("fails", [False, True])

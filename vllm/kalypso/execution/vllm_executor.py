@@ -125,7 +125,9 @@ class VLLMExecutor(LLMExecutor):
         return CompletionResult(
             text=data['choices'][0]['message']['content'],
             request_id=request_id,
-            finish_reason=data["choices"][0].get("finish_reason", "")
+            finish_reason=data["choices"][0].get("finish_reason", ""),
+            prompt_tokens=(data.get("usage") or {}).get("prompt_tokens"),
+            completion_tokens=(data.get("usage") or {}).get("completion_tokens"),
         )
 
 
@@ -182,6 +184,8 @@ class VLLMExecutor(LLMExecutor):
             text=data["choices"][0]["text"],
             request_id=request_id,
             finish_reason=data["choices"][0].get("finish_reason", ""),
+            prompt_tokens=(data.get("usage") or {}).get("prompt_tokens"),
+            completion_tokens=(data.get("usage") or {}).get("completion_tokens"),
         )
 
     async def unpin(self, raw_request: Request, request_id: str):

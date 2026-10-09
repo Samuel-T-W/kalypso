@@ -2,12 +2,14 @@
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
 import asyncio
 import json
+import time
 from pathlib import Path
 from typing import Any
 
 import aiohttp
 
 from .executor import CompletionResult, Determinism, LLMExecutor
+from .instrumentation import CALL_CONTEXT, RequestTracer, sample_queue_depth
 from .worker_client import WorkerClient
 
 
@@ -21,6 +23,7 @@ class Worker(LLMExecutor):
         self.client = client
         self.outstanding = 0
         self.completed = 0
+        self.tracer: RequestTracer | None = None
 
     async def execute(
         self,
@@ -32,6 +35,8 @@ class Worker(LLMExecutor):
         determinism: Determinism | None = None,
     ) -> CompletionResult:
         self.outstanding += 1
+        start = time.time()
+        result = None
         try:
             result = await self.client.execute(
                 raw_request, prompt, max_tokens, pin, priority, determinism
@@ -40,6 +45,29 @@ class Worker(LLMExecutor):
             return result
         finally:
             self.outstanding -= 1
+            if self.tracer is not None:
+                self._trace(start, result)
+
+    def _trace(self, start: float, result: CompletionResult | None) -> None:
+        finish = time.time()
+        context = CALL_CONTEXT.get() or {}
+        self.tracer.record_request(
+            {
+                "worker_id": self.worker_id,
+                "worker": self.name,
+                "row": context.get("row"),
+                "stage": context.get("stage"),
+                "op": context.get("op"),
+                "op_index": context.get("op_index"),
+                "submit": context.get("ready_at"),
+                "start": start,
+                "finish": finish,
+                "latency": finish - start,
+                "prompt_tokens": getattr(result, "prompt_tokens", None),
+                "output_tokens": getattr(result, "completion_tokens", None),
+                "ok": result is not None,
+            }
+        )
 
     async def complete(self, *args: Any, **kwargs: Any) -> CompletionResult:
         return await self.client.complete(*args, **kwargs)
@@ -91,6 +119,8 @@ class WorkerPool(LLMExecutor):
         self.policy = policy
         self._admission_cursor = 0
         self._execute_cursor = 0
+        self.tracer: RequestTracer | None = None
+        self._sampler: asyncio.Task | None = None
 
     def __len__(self) -> int:
         return len(self.workers)
@@ -118,6 +148,16 @@ class WorkerPool(LLMExecutor):
             candidates.insert(0, preferred)
         return candidates
 
+    def enable_tracing(self, trace_dir: str | Path) -> None:
+        self.tracer = RequestTracer(trace_dir)
+        for worker in self.workers:
+            worker.tracer = self.tracer
+
+    def start_queue_sampler(self, manager: Any, interval_s: float = 0.5) -> None:
+        self._sampler = asyncio.create_task(
+            sample_queue_depth(self, manager, self.tracer, interval_s)
+        )
+
     def total_kv_budget(self) -> int:
         return sum(worker.kv_budget for worker in self.workers)
 
@@ -142,9 +182,17 @@ class WorkerPool(LLMExecutor):
         await self.workers[0].abort(raw_request, request_id)
 
     async def close(self) -> None:
+        if self._sampler is not None:
+            self._sampler.cancel()
+            self._sampler = None
         await asyncio.gather(
             *(worker.close() for worker in self.workers), return_exceptions=True
         )
+        if self.tracer is not None:
+            self.tracer.close()
+            self.tracer = None
+            for worker in self.workers:
+                worker.tracer = None
 
     @classmethod
     async def from_config(

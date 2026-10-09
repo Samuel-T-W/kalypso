@@ -7,10 +7,19 @@ from typing import Optional
 
 
 class CompletionResult:
-    def __init__(self, text: str, request_id: str, finish_reason):
+    def __init__(
+        self,
+        text: str,
+        request_id: str,
+        finish_reason,
+        prompt_tokens: int | None = None,
+        completion_tokens: int | None = None,
+    ):
         self.text = text
         self.request_id = request_id
         self.finish_reason = finish_reason
+        self.prompt_tokens = prompt_tokens
+        self.completion_tokens = completion_tokens
 
 
 def determinism_seed() -> str | None:
@@ -84,7 +93,13 @@ def apply_determinism(
         prompt if isinstance(prompt, str) else json.dumps(prompt, sort_keys=True)
     )
     digest = hashlib.sha256(f"{seed}|{canonical_prompt}".encode()).digest()
-    return CompletionResult(determinism.reply(digest), result.request_id, "stop")
+    return CompletionResult(
+        determinism.reply(digest),
+        result.request_id,
+        "stop",
+        prompt_tokens=result.prompt_tokens,
+        completion_tokens=result.completion_tokens,
+    )
 
 
 class LLMExecutor(ABC):

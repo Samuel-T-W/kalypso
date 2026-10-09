@@ -1,9 +1,11 @@
 from dataclasses import dataclass, field
 import math
+import time
 from itertools import count
 from typing import Any
 
 from vllm.kalypso.budget import KVMemoryManager
+from vllm.kalypso.execution.instrumentation import CALL_CONTEXT
 from vllm.kalypso.context import RETRY_TASK, RetryTaskResult
 from vllm.kalypso.execution.worker_pool import WorkerPool
 from vllm.kalypso.sem_ops import OpBehavior, ops
@@ -21,6 +23,7 @@ class Task:
     retry_priority: int | None = None
     reserved_budget: int = 0
     task_id: int = field(default_factory=lambda: next(_TASK_IDS))
+    ready_at: float = field(default_factory=time.time)
 
 
 class Stage:
@@ -193,6 +196,15 @@ class Stage:
                     task.retry_priority
                     if idx == task.op_index and task.retry_priority is not None
                     else -(self.priority_offset + idx)
+                )
+                CALL_CONTEXT.set(
+                    {
+                        "row": task.ctx.state.idx,
+                        "stage": self.stage_id,
+                        "op": type(op).__name__,
+                        "op_index": idx,
+                        "ready_at": task.ready_at,
+                    }
                 )
                 keep_going = await op(
                     task.ctx,

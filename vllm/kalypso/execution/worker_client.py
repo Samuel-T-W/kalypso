@@ -106,10 +106,13 @@ class WorkerClient(LLMExecutor):
         payload = self._build_chat_request(prompt, max_tokens, pin, priority)
         data = await self._post("/v1/chat/completions", payload)
         choice = data["choices"][0]
+        usage = data.get("usage") or {}
         return CompletionResult(
             text=choice["message"]["content"],
             request_id=data["id"],
             finish_reason=choice.get("finish_reason", ""),
+            prompt_tokens=usage.get("prompt_tokens"),
+            completion_tokens=usage.get("completion_tokens"),
         )
 
     async def complete(
@@ -118,10 +121,13 @@ class WorkerClient(LLMExecutor):
         payload = self._build_request(prompt, max_tokens, pin, priority)
         data = await self._post("/v1/completions", payload)
         choice = data["choices"][0]
+        usage = data.get("usage") or {}
         return CompletionResult(
             text=choice["text"],
             request_id=data["id"],
             finish_reason=choice.get("finish_reason", ""),
+            prompt_tokens=usage.get("prompt_tokens"),
+            completion_tokens=usage.get("completion_tokens"),
         )
 
     async def unpin(self, raw_request, request_id: str):

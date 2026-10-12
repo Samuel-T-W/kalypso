@@ -2,10 +2,9 @@
 import json
 from fastapi import Request
 from vllm.entrypoints.openai.protocol import CompletionRequest, ChatCompletionRequest
-from vllm.entrypoints.openai.api_server import create_completion, create_chat_completion
 from vllm.kalypso.pin_registry import PinnedRequestRegistry
 
-from .executor import LLMExecutor, CompletionResult
+from .executor import LLMExecutor, CompletionResult, Determinism, apply_determinism
 
 
 class VLLMExecutor(LLMExecutor):
@@ -61,16 +60,18 @@ class VLLMExecutor(LLMExecutor):
         prompt,
         max_tokens: int,
         pin: bool = False,
-        priority: int = 0
+        priority: int = 0,
+        determinism: Determinism | None = None,
     ) -> CompletionResult:
         llm_func = self.complete if type(prompt) is str else self.chatcomplete
-        return await llm_func(
+        result = await llm_func(
             raw_request=raw_request,
             prompt=prompt,
             max_tokens=max_tokens,
             pin=pin,
             priority=priority,
         )
+        return apply_determinism(prompt, result, determinism)
 
 
     async def chatcomplete(
@@ -91,6 +92,8 @@ class VLLMExecutor(LLMExecutor):
             f"priority={priority} "
             f"prompt_items={prompt_items}"
         )
+
+        from vllm.entrypoints.openai.api_server import create_chat_completion
 
         gen = await create_chat_completion(
             request=req,
@@ -145,6 +148,8 @@ class VLLMExecutor(LLMExecutor):
             f"priority={priority} "
             f"prompt_len={prompt_len}"
         )
+
+        from vllm.entrypoints.openai.api_server import create_completion
 
         gen = await create_completion(
             request=req,

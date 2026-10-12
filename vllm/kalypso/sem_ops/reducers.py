@@ -20,10 +20,13 @@ from vllm.kalypso.context import (
 )
 from vllm.kalypso.budget import KVMemoryManager
 from vllm.kalypso.controller.map_estimator import MapRatioEstimator
+from vllm.kalypso.execution.executor import Bucket, Choice
 from vllm.kalypso.execution.pipeline_execution import BlockingExecutor
 
 
 class SemAgg(BaseOp):
+    determinism = Bucket(num_buckets=10)
+
     def __init__(self, instruction: str, max_tokens: int = 512, concurrency: int = 8, position=-1):
         super().__init__(behavior=OpBehavior.BLOCKING, position=position)
         self.instruction = instruction
@@ -142,6 +145,7 @@ class SemAgg(BaseOp):
             prompt=prompt,
             max_tokens=self.max_tokens,
             pin=False,
+            determinism=self.determinism,
         )
 
         ctx = SemContext(
@@ -160,6 +164,7 @@ class SemAgg(BaseOp):
 
 class SemTopK(BaseOp):
     MERGE_RANK_THRESHOLD = 8
+    determinism = Choice(["A", "B"])
 
     def __init__(self, instruction: str, k: int= 10, concurrency: int = 20, position=-1):
         super().__init__(behavior=OpBehavior.BLOCKING, position=position)
@@ -233,6 +238,7 @@ class SemTopK(BaseOp):
                         prompt=self.prompt,
                         max_tokens=max_tokens,
                         pin=False,
+                        determinism=parent.determinism,
                     )
                     return other, result.text.strip().upper()
                 
@@ -316,5 +322,6 @@ class SemTopK(BaseOp):
             prompt=prompt,
             max_tokens=self.max_tokens,
             pin=False,
+            determinism=self.determinism,
         )
         return result.text.strip().upper().startswith("A")

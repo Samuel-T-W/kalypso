@@ -6,13 +6,14 @@ from vllm.kalypso.budget import KVMemoryManager
 from vllm.kalypso.context import RetryTaskResult
 # from vllm.kalypso.controller.map_estimator import MapRatioEstimator
 from vllm.kalypso.controller.stage import Task
+from vllm.kalypso.execution.worker_pool import WorkerPool
 from vllm.kalypso.sem_ops import OpBehavior, ops
 
 
 class PlanExecutor:
 
-    def __init__(self):
-        self.pipeline_executor = AsyncPipelineExecutor()
+    def __init__(self, pool: WorkerPool | None = None):
+        self.pipeline_executor = AsyncPipelineExecutor(pool)
         self.blocking_executor = BlockingExecutor()
 
     async def execute(self, ctxs, plan):
@@ -109,7 +110,8 @@ class AsyncPipelineExecutor:
     LOG_RETRY_TRACE = False
     LOG_DEFERRAL_TRACE = False
 
-    def __init__(self):
+    def __init__(self, pool: WorkerPool | None = None):
+        self.pool = pool
         self.manager = KVMemoryManager.get_instance()
 
     async def execute_tasks(self, ctxs, stages):

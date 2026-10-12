@@ -20,6 +20,7 @@ from vllm.kalypso.context import (
 )
 from vllm.kalypso.budget import KVMemoryManager
 from vllm.kalypso.controller.map_estimator import MapRatioEstimator
+from vllm.kalypso.execution.executor import BOOLEAN
 from vllm.kalypso.execution.pipeline_execution import BlockingExecutor
 
 
@@ -28,6 +29,7 @@ class SemFilter(BaseOp):
     TRUE = 'true'
     FALSE = 'false'
     LOG = False
+    determinism = BOOLEAN
 
     def __init__(
         self,
@@ -85,6 +87,7 @@ class SemFilter(BaseOp):
                 max_tokens=self.max_tokens,
                 pin=self.pin,
                 priority=priority,
+                determinism=self.determinism,
         )
         if self.pin:
             ctx.state.pin_req_id = output.request_id
@@ -135,6 +138,8 @@ class SemFilter(BaseOp):
 
 class ICPFilter(BaseOp):
     LOG = False
+    # Undecided rows go to a SemFilter oracle.
+    determinism = BOOLEAN
     STATS = {
         "called": 0,
         "fallback": 0,
@@ -247,6 +252,7 @@ class CascadeOperator(BaseOp):
     TRUE = 'true'
     FALSE = 'false'
     LOG = True
+    # No determinism: the helper model is called through litellm, not the executor.
     delegate_to_main_count = 0
     STATS = {
         "called": 0,

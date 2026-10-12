@@ -14,5 +14,6 @@ Omit `--detach` to keep the launcher running; Ctrl-C stops its child processes.
 Use `-m MODEL`, `-p POLICY`, `-b BASE_PORT`, `-c COORD_PORT`, and `-o OUT_DIR` to override defaults; append coordinator arguments after `--`.
 Defaults are Qwen/Qwen2.5-0.5B-Instruct, round_robin, workers on 8101 onward, coordinator on 8100, and `./kalypso_run` for logs/config/traces.
 `KALYPSO_COIN_FLIP_SEED` is inherited by workers and coordinator for reproducible coin-flip testing.
+Each operator declares the reply shape it gets in this mode (true/false for filters and joins, a class for `sem_classify`, A/B for `sem_topk`, one of 10 buckets for `sem_agg`, hash text for `sem_map`); a query with an unsupported operator, such as a cascade filter, is rejected with HTTP 400 before any LLM call.
 Each CPU worker needs about 1 GB for weights plus `KV_GIB` GiB for KV cache; four workers fit on a 16 GB laptop with `KV_GIB=1`.
 The first launch may download model weights; workers start sequentially with `WORKER_READY_TIMEOUT` (default 900 seconds per worker) and `COORD_READY_TIMEOUT` (default 600 seconds for the coordinator).

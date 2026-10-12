@@ -5,6 +5,7 @@ from typing import Any
 
 from vllm.kalypso.budget import KVMemoryManager
 from vllm.kalypso.context import RETRY_TASK, RetryTaskResult
+from vllm.kalypso.execution.worker_pool import WorkerPool
 from vllm.kalypso.sem_ops import OpBehavior, ops
 
 
@@ -37,7 +38,7 @@ class Stage:
         self.fanout_op = fanout_op
         self.priority_offset = priority_offset
         self.waiting_tasks = []
-        self.running_tasks = {}
+        self.running_tasks: dict[int, tuple[int, int]] = {}
         self.bytes_per_token = KVMemoryManager.get_instance().bytes_per_token
         self.low_threshold = 1
         self.high_threshold = 5
@@ -122,40 +123,60 @@ class Stage:
         return max_boundary * self.bytes_per_token
 
 
-    async def accept(self, task: Task, manager=None) -> int | None:
+    async def accept(
+        self, task: Task, manager=None, pool: WorkerPool | None = None
+    ) -> int | None:
         manager = manager or KVMemoryManager.get_instance()
         if task.reserved_budget > 0:
             budget = task.reserved_budget
             task.reserved_budget = 0
-            self.running_tasks[task.task_id] = budget
+            worker_id = task.ctx.state.worker_id or 0
+            self.running_tasks[task.task_id] = (budget, worker_id)
             return budget
 
         budget = self.estimate_budget(task)
-        if not await manager.try_allocate_stage(self.stage_id, budget):
-            return None
-        self.running_tasks[task.task_id] = budget
-        return budget
+        candidates = (
+            pool.candidate_workers(task.ctx.state.worker_id, manager)
+            if pool is not None else [task.ctx.state.worker_id or 0]
+        )
+        for worker_id in candidates:
+            if await manager.try_allocate_stage(self.stage_id, budget, worker_id):
+                task.ctx.state.worker_id = worker_id
+                if pool is not None:
+                    task.ctx.state.executor = pool.worker(worker_id)
+                self.running_tasks[task.task_id] = (budget, worker_id)
+                return budget
+        return None
 
 
-    async def force_accept(self, task: Task, manager=None) -> int:
+    async def force_accept(
+        self, task: Task, manager=None, pool: WorkerPool | None = None
+    ) -> int:
         manager = manager or KVMemoryManager.get_instance()
         if task.reserved_budget > 0:
             budget = task.reserved_budget
             task.reserved_budget = 0
-            self.running_tasks[task.task_id] = budget
+            worker_id = task.ctx.state.worker_id or 0
+            self.running_tasks[task.task_id] = (budget, worker_id)
             return budget
 
         budget = self.estimate_budget(task)
-        await manager.force_allocate_stage(self.stage_id, budget)
-        self.running_tasks[task.task_id] = budget
+        worker_id = task.ctx.state.worker_id
+        if worker_id is None:
+            worker_id = manager.most_free_worker()
+        await manager.force_allocate_stage(self.stage_id, budget, worker_id)
+        task.ctx.state.worker_id = worker_id
+        if pool is not None:
+            task.ctx.state.executor = pool.worker(worker_id)
+        self.running_tasks[task.task_id] = (budget, worker_id)
         return budget
 
-    def detach_budget(self, task: Task) -> int:
-        return self.running_tasks.pop(task.task_id, 0)
+    def detach_budget(self, task: Task) -> tuple[int, int]:
+        return self.running_tasks.pop(task.task_id, (0, 0))
 
-    async def release_budget(self, budget: int, manager=None) -> None:
+    async def release_budget(self, budget: int, worker_id: int, manager=None) -> None:
         manager = manager or KVMemoryManager.get_instance()
-        await manager.release_stage(self.stage_id, budget)
+        await manager.release_stage(self.stage_id, budget, worker_id)
 
     # async def release(self, task: Task, manager=None) -> None:
     #     budget = self.detach_budget(task)

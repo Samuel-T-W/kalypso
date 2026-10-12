@@ -87,6 +87,15 @@ class WorkerPool(LLMExecutor):
     def worker(self, worker_id: int) -> Worker:
         return self.workers[worker_id]
 
+    def candidate_workers(self, preferred: int | None, manager: Any) -> list[int]:
+        candidates = [
+            worker_id for worker_id in range(manager.num_workers())
+            if worker_id != preferred
+        ]
+        if preferred is not None:
+            candidates.insert(0, preferred)
+        return candidates
+
     def total_kv_budget(self) -> int:
         return sum(worker.kv_budget for worker in self.workers)
 

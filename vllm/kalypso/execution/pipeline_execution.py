@@ -53,6 +53,7 @@ class JoinTracker:
         stage_id: int | None = None,
         reserved_budget: int = 0,
         on_release=None,
+        worker_id: int = 0,
     ):
         self.parent_ctx = parent_ctx
         self.pending_children = pending_children
@@ -60,6 +61,7 @@ class JoinTracker:
         self.stage_id = stage_id
         self.reserved_budget = reserved_budget
         self.on_release = on_release
+        self.worker_id = worker_id
         self.lock = asyncio.Lock()
 
     async def child_finished(self):
@@ -99,7 +101,9 @@ class JoinTracker:
                     f"parent_pin={self.parent_ctx.state.pin_req_id} "
                     f"reserved_budget={self.reserved_budget}"
                 )
-            await self.manager.release_stage(self.stage_id, self.reserved_budget)
+            await self.manager.release_stage(
+                self.stage_id, self.reserved_budget, self.worker_id
+            )
             if self.on_release is not None:
                 self.on_release(self.stage_id, self.reserved_budget)
 
@@ -322,7 +326,7 @@ class AsyncPipelineExecutor:
                         break
 
                     # refresh_retry_max_tokens(stage, task)
-                    if await stage.accept(task, self.manager) is None:
+                    if await stage.accept(task, self.manager, self.pool) is None:
                         break
 
                     record_input(stage.stage_id)
@@ -347,7 +351,7 @@ class AsyncPipelineExecutor:
                 record_input(stage.stage_id)
                 stage.pop_task()
                 # refresh_retry_max_tokens(stage, task)
-                await stage.force_accept(task, self.manager)
+                await stage.force_accept(task, self.manager, self.pool)
                 log_running_tasks(
                     f"force-start task={task.task_id} stage={stage.stage_id}"
                 )
@@ -386,11 +390,11 @@ class AsyncPipelineExecutor:
 
             for future in done:
                 stage, task = active.pop(future)
-                budget = stage.detach_budget(task)
+                budget, worker_id = stage.detach_budget(task)
                 try:
                     result = future.result()
                 except Exception:
-                    await stage.release_budget(budget, self.manager)
+                    await stage.release_budget(budget, worker_id, self.manager)
                     log_running_tasks(
                         f"finish task={task.task_id} stage={stage.stage_id}"
                     )
@@ -419,7 +423,7 @@ class AsyncPipelineExecutor:
                     stages[task.stage_index].enqueue(retry_task)
                     record_retry(stage.stage_id)
                     if not result.retain_budget:
-                        await stage.release_budget(budget, self.manager)
+                        await stage.release_budget(budget, worker_id, self.manager)
                     log_running_tasks(
                         f"retry task={task.task_id} stage={stage.stage_id} "
                         f"retain_budget={result.retain_budget}"
@@ -428,7 +432,7 @@ class AsyncPipelineExecutor:
                     continue
 
                 if result is None:
-                    await stage.release_budget(budget, self.manager)
+                    await stage.release_budget(budget, worker_id, self.manager)
                     log_running_tasks(
                         f"finish task={task.task_id} stage={stage.stage_id}"
                     )
@@ -448,7 +452,7 @@ class AsyncPipelineExecutor:
                                 task.ctx.state.pin_req_id,
                             )
                             task.ctx.state.pin_req_id = None
-                        await stage.release_budget(budget, self.manager)
+                        await stage.release_budget(budget, worker_id, self.manager)
                         log_running_tasks(
                             f"finish task={task.task_id} stage={stage.stage_id}"
                         )
@@ -476,6 +480,7 @@ class AsyncPipelineExecutor:
                                 manager=self.manager,
                                 stage_id=stage.stage_id,
                                 reserved_budget=budget,
+                                worker_id=worker_id,
                                 on_release=release_deferred_parent,
                             ),
                         )
@@ -494,7 +499,7 @@ class AsyncPipelineExecutor:
                             stages[next_stage_index].enqueue(child_task)
 
                     if not deferred_release:
-                        await stage.release_budget(budget, self.manager)
+                        await stage.release_budget(budget, worker_id, self.manager)
 
                     log_running_tasks(
                         f"finish task={task.task_id} stage={stage.stage_id} "
@@ -515,7 +520,7 @@ class AsyncPipelineExecutor:
                 else:
                     stages[next_stage_index].enqueue(next_task)
 
-                await stage.release_budget(budget, self.manager)
+                await stage.release_budget(budget, worker_id, self.manager)
                 log_running_tasks(
                     f"finish task={task.task_id} stage={stage.stage_id}"
                 )

@@ -140,3 +140,47 @@ def test_query_requires_exactly_one_input(worker_urls, tmp_path):
             json={"ops": [{"op": "sem_filter", "args": {"prompt": "x"}}]},
         )
         assert response.status_code == 400
+
+
+def test_determinism_shapes_replies_and_rejects_unsupported_ops(
+    worker_urls, tmp_path, monkeypatch
+):
+    urls, calls = worker_urls
+    config = tmp_path / "workers.json"
+    config.write_text(json.dumps({"workers": [{"url": url} for url in urls]}))
+    args = parse_args(["--workers-config", str(config)])
+    monkeypatch.setenv("KALYPSO_COIN_FLIP_SEED", "7")
+    records = [f"item {i}" for i in range(12)]
+
+    with TestClient(build_app(args)) as client:
+        response = client.post(
+            "/v1/semantic/query",
+            json={
+                "ops": [
+                    {"op": "sem_filter", "args": {"prompt": "Keep it?"}},
+                    {"op": "sem_classify", "args": {"classes": ["red", "blue"]}},
+                ],
+                "records": records,
+            },
+        )
+        assert response.status_code == 200, response.text
+        rows = response.json()["results"]
+        assert 0 < len(rows) < len(records)
+        for row in rows:
+            verdict, group = (o["value"] for o in row["outputs"])
+            assert verdict == "true"
+            assert group in ("red", "blue")
+
+        before = len(calls[0]) + len(calls[1])
+        response = client.post(
+            "/v1/semantic/query",
+            json={
+                "ops": [
+                    {"op": "sem_filter", "args": {"prompt": "x", "cascade": True}}
+                ],
+                "records": records,
+            },
+        )
+        assert response.status_code == 400
+        assert "sem_filter at position 0 (CascadeOperator)" in response.json()["detail"]
+        assert len(calls[0]) + len(calls[1]) == before

@@ -8,6 +8,7 @@ import uuid
 from fastapi import HTTPException, Request
 
 from vllm.kalypso import interface, query
+from vllm.kalypso.controller.plan import DeterminismUnsupportedError
 from vllm.kalypso.query_processor import QueryProcessor
 
 
@@ -98,7 +99,10 @@ async def run_semantic_query(
     _query = query.Query(sem_request.ops, data_path)
     print("query called")
 
-    out_ctxs = await processor.execute(raw_request, _query)
+    try:
+        out_ctxs = await processor.execute(raw_request, _query)
+    except DeterminismUnsupportedError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     results = []
     for ctx in out_ctxs:

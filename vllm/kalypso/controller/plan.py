@@ -4,10 +4,32 @@ from vllm.kalypso.sem_ops import OpBehavior, OpName, ops
 from vllm.kalypso.query import Query
 from vllm.kalypso.data import data
 from vllm.kalypso.budget import KVMemoryManager
+from vllm.kalypso.execution.executor import determinism_seed
 from vllm.kalypso.execution.pipeline_execution import PlanExecutor
 from vllm.kalypso.execution.worker_pool import WorkerPool
 from vllm.kalypso.controller.map_estimator import MapRatioEstimator
 from .stage import Stage, Task, stage_builder
+
+class DeterminismUnsupportedError(ValueError):
+    pass
+
+
+def check_determinism(logical_ops, physical_ops) -> None:
+    """Fail before execution if determinism is on and an operator lacks support."""
+    if determinism_seed() is None:
+        return
+    unsupported = [
+        f"{logical_ops[op.position]['op']} at position {op.position} "
+        f"({op.__class__.__name__})"
+        for op in physical_ops
+        if op.CALLS_LLM and op.determinism is None
+    ]
+    if unsupported:
+        raise DeterminismUnsupportedError(
+            "Determinism is on (KALYPSO_COIN_FLIP_SEED is set), but these "
+            "operators do not support it: " + "; ".join(unsupported)
+        )
+
 
 class SemanticPlan:
     ESTIMATED_CTX_SAMPLE_SIZE = 100
@@ -496,9 +518,10 @@ class SemanticPlan:
 
     async def execute(self, raw_request, query: Query):
         
+        physical_ops = self.parse_ops(query.ops)
+        check_determinism(query.ops, physical_ops)
         ctxs = list(data._data_source(raw_request, query.data_path, self.executor))
         MapRatioEstimator.instance()
-        physical_ops = self.parse_ops(query.ops)
         plan = self.build(ctxs, physical_ops)
         self.print_plan(plan)
 

@@ -3,10 +3,16 @@
 import asyncio
 import re
 from collections import Counter
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+from vllm.kalypso.budget import KVMemoryManager
+from vllm.kalypso.controller.plan import (
+    DeterminismUnsupportedError,
+    SemanticPlan,
+    check_determinism,
+)
 from vllm.kalypso.execution.executor import (
     BOOLEAN,
     Bucket,
@@ -140,3 +146,50 @@ def test_execute_still_calls_backend(monkeypatch, client, prompt, seed):
         assert result.request_id == "req-1"
         assert result.finish_reason == "stop"
 
+
+@pytest.fixture
+def parse(monkeypatch):
+    manager = Mock(token_length=Mock(return_value=1))
+    monkeypatch.setattr(KVMemoryManager, "get_instance", lambda: manager)
+    plan = SemanticPlan(AsyncMock())
+    return lambda logical: (logical, plan.parse_ops(logical))
+
+
+SUPPORTED = [
+    {"op": "sem_filter", "args": {"prompt": "p"}},
+    {"op": "sem_map", "args": {"prompt": "p"}},
+    {"op": "sem_classify", "args": {"classes": ["a", "b"]}},
+    {"op": "join", "args": {"instruction": "p"}},
+    {"op": "sem_agg", "args": {"instruction": "p"}},
+    {"op": "sem_topk", "args": {"instruction": "p", "k": 2}},
+]
+
+
+@pytest.mark.parametrize("seed", [None, "1"])
+def test_check_accepts_supported_operators(monkeypatch, parse, seed):
+    if seed is None:
+        monkeypatch.delenv("KALYPSO_COIN_FLIP_SEED", raising=False)
+    else:
+        monkeypatch.setenv("KALYPSO_COIN_FLIP_SEED", seed)
+    logical, physical = parse(SUPPORTED)
+    check_determinism(logical, physical)
+    llm_ops = [op for op in physical if op.CALLS_LLM]
+    assert len(llm_ops) == len(SUPPORTED)
+    assert all(op.determinism is not None for op in llm_ops)
+
+
+def test_check_names_unsupported_operators(monkeypatch, parse):
+    logical, physical = parse(
+        [
+            {"op": "sem_filter", "args": {"prompt": "p"}},
+            {"op": "sem_filter", "args": {"prompt": "p", "cascade": True}},
+        ]
+    )
+    monkeypatch.delenv("KALYPSO_COIN_FLIP_SEED", raising=False)
+    check_determinism(logical, physical)
+    monkeypatch.setenv("KALYPSO_COIN_FLIP_SEED", "1")
+    with pytest.raises(DeterminismUnsupportedError) as exc:
+        check_determinism(logical, physical)
+    message = str(exc.value)
+    assert "sem_filter at position 1 (CascadeOperator)" in message
+    assert "position 0" not in message

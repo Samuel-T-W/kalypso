@@ -3,7 +3,7 @@ from typing import Any
 
 import aiohttp
 
-from .executor import CompletionResult, LLMExecutor, apply_determinism
+from .executor import CompletionResult, Determinism, LLMExecutor, apply_determinism
 
 
 class WorkerClient(LLMExecutor):
@@ -82,7 +82,13 @@ class WorkerClient(LLMExecutor):
             return await resp.json()
 
     async def execute(
-        self, raw_request, prompt, max_tokens: int, pin: bool = False, priority: int = 0
+        self,
+        raw_request,
+        prompt,
+        max_tokens: int,
+        pin: bool = False,
+        priority: int = 0,
+        determinism: Determinism | None = None,
     ) -> CompletionResult:
         llm_func = self.complete if type(prompt) is str else self.chatcomplete
         result = await llm_func(
@@ -92,7 +98,7 @@ class WorkerClient(LLMExecutor):
             pin=pin,
             priority=priority,
         )
-        return apply_determinism(prompt, result)
+        return apply_determinism(prompt, result, determinism)
 
     async def chatcomplete(
         self, raw_request, prompt, max_tokens: int, pin: bool = False, priority: int = 0

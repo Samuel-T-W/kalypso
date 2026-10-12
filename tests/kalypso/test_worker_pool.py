@@ -61,7 +61,7 @@ def test_query_rows_call_worker_pool(tmp_path, monkeypatch, injected, budget):
         "request-1",
         "stop",
     )
-    client.execute.assert_awaited_once_with(raw_request, "hello", 8, False, 7)
+    client.execute.assert_awaited_once_with(raw_request, "hello", 8, False, 7, None)
     assert (pool.worker(0).outstanding, pool.worker(0).completed) == (0, 1)
     if injected:
         pool.worker(1).client.execute.assert_not_awaited()

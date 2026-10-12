@@ -2,22 +2,32 @@
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
 import asyncio
 import re
+from collections import Counter
 from unittest.mock import AsyncMock
 
 import pytest
 
-from vllm.kalypso.execution.executor import CompletionResult, apply_determinism
+from vllm.kalypso.execution.executor import (
+    BOOLEAN,
+    Bucket,
+    Choice,
+    CompletionResult,
+    Text,
+    apply_determinism,
+)
 
 
 def test_literal_seeded_replies(monkeypatch):
     result = CompletionResult("real reply", "req-1", "length")
-    monkeypatch.setenv("KALYPSO_COIN_FLIP_SEED", "1")
-    flipped = apply_determinism("hello", result)
-    assert flipped.text == "true 79057cc0"
+    monkeypatch.setenv("KALYPSO_COIN_FLIP_SEED", "2")
+    flipped = apply_determinism("hello", result, BOOLEAN)
+    assert flipped.text == "true"
     assert flipped.request_id == "req-1"
     assert flipped.finish_reason == "stop"
-    monkeypatch.setenv("KALYPSO_COIN_FLIP_SEED", "3")
-    assert apply_determinism("hello", result).text == "false a8d582d6"
+    assert apply_determinism("hello", result, Bucket()).text == "bucket 4"
+    monkeypatch.setenv("KALYPSO_COIN_FLIP_SEED", "1")
+    assert apply_determinism("hello", result, BOOLEAN).text == "false"
+    assert apply_determinism("hello", result, Text()).text == "79057cc0"
     assert result.text == "real reply"
     assert result.finish_reason == "length"
 
@@ -29,17 +39,29 @@ def test_disabled_returns_same_result(monkeypatch, seed):
     else:
         monkeypatch.setenv("KALYPSO_COIN_FLIP_SEED", seed)
     result = CompletionResult("original\ntext", "req-2", "length")
-    assert apply_determinism("hello", result) is result
+    assert apply_determinism("hello", result, None) is result
+
+
+def test_enabled_without_strategy_raises(monkeypatch):
+    monkeypatch.setenv("KALYPSO_COIN_FLIP_SEED", "1")
+    with pytest.raises(RuntimeError, match="no determinism strategy"):
+        apply_determinism("hello", CompletionResult("x", "id", "stop"), None)
 
 
 @pytest.mark.parametrize("prompt", ["hello", [{"role": "user", "content": "hello"}]])
 def test_prompt_determines_reply_independent_of_call_order(monkeypatch, prompt):
     monkeypatch.setenv("KALYPSO_COIN_FLIP_SEED", "42")
-    first = apply_determinism(prompt, CompletionResult("answer A", "req-A", "length"))
-    apply_determinism("intervening prompt", CompletionResult("other", "req-B", "stop"))
-    second = apply_determinism(prompt, CompletionResult("answer C", "req-C", "stop"))
+    first = apply_determinism(
+        prompt, CompletionResult("answer A", "req-A", "length"), Text()
+    )
+    apply_determinism(
+        "intervening prompt", CompletionResult("other", "req-B", "stop"), Text()
+    )
+    second = apply_determinism(
+        prompt, CompletionResult("answer C", "req-C", "stop"), Text()
+    )
     assert first.text == second.text
-    assert re.fullmatch(r"(?:true|false) [0-9a-f]{8}", first.text)
+    assert re.fullmatch(r"[0-9a-f]{8}", first.text)
     assert first.request_id == "req-A"
     assert second.request_id == "req-C"
 
@@ -50,12 +72,40 @@ def test_chat_dictionary_key_order_is_canonical(monkeypatch):
     first = [{"role": "user", "content": "hello"}]
     reordered = [{"content": "hello", "role": "user"}]
     assert (
-        apply_determinism(first, result).text == apply_determinism(reordered, result).text
+        apply_determinism(first, result, Text()).text
+        == apply_determinism(reordered, result, Text()).text
     )
     different = [{"role": "user", "content": "goodbye"}]
     assert (
-        apply_determinism(first, result).text != apply_determinism(different, result).text
+        apply_determinism(first, result, Text()).text
+        != apply_determinism(different, result, Text()).text
     )
+
+
+def test_choice_only_returns_options_and_uses_all_of_them(monkeypatch):
+    monkeypatch.setenv("KALYPSO_COIN_FLIP_SEED", "9")
+    classes = Choice(["positive", "negative", "neutral"])
+    result = CompletionResult("x", "id", "stop")
+    replies = Counter(
+        apply_determinism(f"row {i}", result, classes).text for i in range(300)
+    )
+    assert set(replies) == {"positive", "negative", "neutral"}
+
+
+def test_bucket_spreads_calls_about_one_tenth_each(monkeypatch):
+    monkeypatch.setenv("KALYPSO_COIN_FLIP_SEED", "9")
+    result = CompletionResult("x", "id", "stop")
+    counts = Counter(
+        apply_determinism(f"chunk {i}", result, Bucket()).text for i in range(2000)
+    )
+    assert set(counts) == {f"bucket {b}" for b in range(10)}
+    assert all(150 <= n <= 250 for n in counts.values())
+
+
+@pytest.mark.parametrize("bad", [lambda: Choice([]), lambda: Bucket(0)])
+def test_strategy_rejects_empty_spaces(bad):
+    with pytest.raises(ValueError):
+        bad()
 
 
 @pytest.mark.parametrize("client", ["local", "remote"])
@@ -79,13 +129,14 @@ def test_execute_still_calls_backend(monkeypatch, client, prompt, seed):
     method = "complete" if isinstance(prompt, str) else "chatcomplete"
     monkeypatch.setattr(executor, method, backend)
     request = object()
-    result = asyncio.run(executor.execute(request, prompt, 32, False, 7))
+    result = asyncio.run(executor.execute(request, prompt, 32, False, 7, BOOLEAN))
     backend.assert_awaited_once_with(
         raw_request=request, prompt=prompt, max_tokens=32, pin=False, priority=7
     )
     if seed is None:
         assert result is original
     else:
-        assert re.fullmatch(r"(?:true|false) [0-9a-f]{8}", result.text)
+        assert result.text in ("true", "false")
         assert result.request_id == "req-1"
         assert result.finish_reason == "stop"
+

@@ -7,7 +7,7 @@ from typing import Any
 
 import aiohttp
 
-from .executor import CompletionResult, LLMExecutor
+from .executor import CompletionResult, Determinism, LLMExecutor
 from .worker_client import WorkerClient
 
 
@@ -29,11 +29,12 @@ class Worker(LLMExecutor):
         max_tokens: int,
         pin: bool = False,
         priority: int = 0,
+        determinism: Determinism | None = None,
     ) -> CompletionResult:
         self.outstanding += 1
         try:
             result = await self.client.execute(
-                raw_request, prompt, max_tokens, pin, priority
+                raw_request, prompt, max_tokens, pin, priority, determinism
             )
             self.completed += 1
             return result

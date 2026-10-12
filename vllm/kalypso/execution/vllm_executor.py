@@ -4,7 +4,7 @@ from fastapi import Request
 from vllm.entrypoints.openai.protocol import CompletionRequest, ChatCompletionRequest
 from vllm.kalypso.pin_registry import PinnedRequestRegistry
 
-from .executor import LLMExecutor, CompletionResult, apply_determinism
+from .executor import LLMExecutor, CompletionResult, Determinism, apply_determinism
 
 
 class VLLMExecutor(LLMExecutor):
@@ -60,7 +60,8 @@ class VLLMExecutor(LLMExecutor):
         prompt,
         max_tokens: int,
         pin: bool = False,
-        priority: int = 0
+        priority: int = 0,
+        determinism: Determinism | None = None,
     ) -> CompletionResult:
         llm_func = self.complete if type(prompt) is str else self.chatcomplete
         result = await llm_func(
@@ -70,7 +71,7 @@ class VLLMExecutor(LLMExecutor):
             pin=pin,
             priority=priority,
         )
-        return apply_determinism(prompt, result)
+        return apply_determinism(prompt, result, determinism)
 
 
     async def chatcomplete(

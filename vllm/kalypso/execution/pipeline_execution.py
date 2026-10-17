@@ -6,13 +6,17 @@ from vllm.kalypso.budget import KVMemoryManager
 from vllm.kalypso.context import RetryTaskResult
 from vllm.kalypso.controller.stage import Task
 from vllm.kalypso.sem_ops import OpBehavior, ops
+from vllm.kalypso.workers.policy import admit, RoundRobinPolicy
 
 
 class PlanExecutor:
 
     def __init__(self, pool=None, policy=None):
-        self.pipeline_executor = AsyncPipelineExecutor(pool=pool, policy=policy)
-        self.blocking_executor = BlockingExecutor()
+        self.manager = KVMemoryManager.get_instance()
+        self.pool = pool
+        self.policy = policy if policy is not None else (
+            RoundRobinPolicy() if pool is not None else None
+        )
 
     async def execute(self, ctxs, plan):
 
@@ -338,7 +342,11 @@ class AsyncPipelineExecutor:
 
                     # refresh_retry_max_tokens(stage, task)
                     if self.MEMORY_ADMISSION_CONTROL:
-                        if await stage.accept(task, self.manager) is None:
+                        if self.pool is not None:
+                            admitted = await admit(stage, task, self.pool, self.policy)
+                        else:
+                            admitted = await stage.accept(task, self.manager)
+                        if admitted is None:
                             break
                     else:
                         stage.accept_unconditionally(task)

@@ -55,3 +55,27 @@ def make_policy(name):
         return POLICIES[name]()
     except KeyError:
         raise ValueError(f"unknown policy {name!r}; choose from {sorted(POLICIES)}")
+
+
+async def admit(stage, task, pool, policy):
+    """Pick a worker for a task and reserve memory on it.
+
+    Returns the reserved budget, or None if no worker has room.
+    `stage` only needs an async accept(task, manager) method that returns a
+    budget on success and None (with no side effects) on failure.
+    """
+    state = task.ctx.state
+
+    # Follow-up (retry, later operator): stay on the assigned worker.
+    if state.worker is not None:
+        return await stage.accept(task, pool.manager(state.worker))
+
+    # Fresh row: try workers in the policy's order until one has room.
+    for w in policy.rank(pool, task):
+        budget = await stage.accept(task, pool.manager(w))
+        if budget is not None:
+            state.worker = w
+            state.executor = w.executor  # operators call state.executor, so they need no edits
+            policy.on_assigned(w, pool)
+            return budget
+    return None

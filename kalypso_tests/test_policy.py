@@ -96,6 +96,100 @@ def test_make_policy():
     except ValueError:
         pass
 
+import asyncio
+from types import SimpleNamespace as NS
+
+
+class FakeWorker:
+    def __init__(self, name):
+        self.name = name
+        self.executor = f"exec-{name}"
+
+
+class FakeAdmitPool:
+    def __init__(self, names, load=None):
+        self.workers = [FakeWorker(n) for n in names]
+        self.load = dict(load or {})
+
+    def manager(self, w):
+        return w.name  # stand-in for a per-worker KVMemoryManager
+
+    def outstanding(self, w):
+        return self.load.get(w.name, 0)
+
+
+class FakeStage:
+    """Accepts a task on a worker's manager unless that worker is marked full."""
+    def __init__(self, full=()):
+        self.full = set(full)
+        self.calls = []
+
+    async def accept(self, task, manager):
+        self.calls.append(manager)
+        return None if manager in self.full else 100
+
+
+def make_task():
+    return NS(ctx=NS(state=NS(worker=None, executor=None)))
+
+
+def run(coro):
+    return asyncio.run(coro)
+
+
+def test_admit_assigns_worker_and_executor():
+    pool = FakeAdmitPool(["w0", "w1"])
+    stage, task = FakeStage(), make_task()
+    assert run(policy.admit(stage, task, pool, policy.RoundRobinPolicy())) == 100
+    assert task.ctx.state.worker.name == "w0"
+    assert task.ctx.state.executor == "exec-w0"
+
+
+def test_admit_round_robin_across_rows():
+    pool, pol, stage = FakeAdmitPool(["w0", "w1"]), policy.RoundRobinPolicy(), FakeStage()
+    tasks = [make_task() for _ in range(4)]
+    for t in tasks:
+        run(policy.admit(stage, t, pool, pol))
+    assert [t.ctx.state.worker.name for t in tasks] == ["w0", "w1", "w0", "w1"]
+
+
+def test_admit_falls_through_when_first_worker_full():
+    pool = FakeAdmitPool(["w0", "w1"])
+    stage, task = FakeStage(full={"w0"}), make_task()
+    run(policy.admit(stage, task, pool, policy.RoundRobinPolicy()))
+    assert task.ctx.state.worker.name == "w1"
+    assert stage.calls == ["w0", "w1"]  # asked w0 first, then w1
+
+
+def test_admit_returns_none_when_all_full_and_assigns_nothing():
+    pool = FakeAdmitPool(["w0", "w1"])
+    stage, task = FakeStage(full={"w0", "w1"}), make_task()
+    assert run(policy.admit(stage, task, pool, policy.RoundRobinPolicy())) is None
+    assert task.ctx.state.worker is None and task.ctx.state.executor is None
+
+
+def test_admit_sticky_row_only_asks_its_own_worker():
+    pool = FakeAdmitPool(["w0", "w1"])
+    stage, task = FakeStage(), make_task()
+    task.ctx.state.worker = pool.workers[1]  # row already lives on w1
+    run(policy.admit(stage, task, pool, policy.RoundRobinPolicy()))
+    assert stage.calls == ["w1"]
+    assert task.ctx.state.worker.name == "w1"
+
+
+def test_admit_sticky_row_waits_if_its_worker_is_full():
+    pool = FakeAdmitPool(["w0", "w1"])
+    stage, task = FakeStage(full={"w1"}), make_task()
+    task.ctx.state.worker = pool.workers[1]
+    assert run(policy.admit(stage, task, pool, policy.RoundRobinPolicy())) is None
+    assert stage.calls == ["w1"]  # never moved to w0
+
+
+def test_admit_least_outstanding_picks_idle_worker():
+    pool = FakeAdmitPool(["w0", "w1"], {"w0": 2, "w1": 0})
+    stage, task = FakeStage(), make_task()
+    run(policy.admit(stage, task, pool, policy.LeastOutstandingPolicy()))
+    assert task.ctx.state.worker.name == "w1"
 
 if __name__ == "__main__":
     tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_")]

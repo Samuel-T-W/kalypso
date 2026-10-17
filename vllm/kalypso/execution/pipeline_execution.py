@@ -12,11 +12,8 @@ from vllm.kalypso.workers.policy import admit, RoundRobinPolicy
 class PlanExecutor:
 
     def __init__(self, pool=None, policy=None):
-        self.manager = KVMemoryManager.get_instance()
-        self.pool = pool
-        self.policy = policy if policy is not None else (
-            RoundRobinPolicy() if pool is not None else None
-        )
+        self.pipeline_executor = AsyncPipelineExecutor(pool=pool, policy=policy)
+        self.blocking_executor = BlockingExecutor()
 
     async def execute(self, ctxs, plan):
 
@@ -154,7 +151,17 @@ class AsyncPipelineExecutor:
     def __init__(self, pool=None, policy=None):
         self.manager = KVMemoryManager.get_instance()
         self.pool = pool
-        self.policy = policy
+        self.policy = policy if policy is not None else (
+            RoundRobinPolicy() if pool is not None else None
+        )
+
+    def _mgr(self, task):
+        """The manager holding this task's budget: its worker's, else the singleton."""
+        if self.pool is not None:
+            w = task.ctx.state.worker
+            if w is not None:
+                return self.pool.manager(w)
+        return self.manager
 
     async def execute_tasks(self, ctxs, stages):
         """
@@ -240,7 +247,7 @@ class AsyncPipelineExecutor:
                 future.cancel()
             await asyncio.gather(*active, return_exceptions=True)
             for future, (stage, task) in list(active.items()):
-                await stage.release_budget(stage.detach_budget(task), self.manager)
+                await stage.release_budget(stage.detach_budget(task), self._mgr(task))
             active.clear()
 
         def record_input(stage_id: int):
@@ -373,7 +380,14 @@ class AsyncPipelineExecutor:
                 record_input(stage.stage_id)
                 stage.pop_task()
                 # refresh_retry_max_tokens(stage, task)
-                await stage.force_accept(task, self.manager)
+                st = task.ctx.state
+                if self.pool is not None and st.worker is None:
+                    # Nothing fits anywhere: take the policy's first choice and
+                    # charge that worker, so the budget is released on it later.
+                    w = self.policy.rank(self.pool, task)[0]
+                    st.worker, st.executor = w, w.executor
+                    self.policy.on_assigned(w, self.pool)
+                await stage.force_accept(task, self._mgr(task))
                 log_running_tasks(
                     f"force-start task={task.task_id} stage={stage.stage_id}"
                 )
@@ -413,10 +427,11 @@ class AsyncPipelineExecutor:
             for future in done:
                 stage, task = active.pop(future)
                 budget = stage.detach_budget(task)
+                mgr = self._mgr(task)
                 try:
                     result = future.result()
                 except Exception:
-                    await stage.release_budget(budget, self.manager)
+                    await stage.release_budget(budget, mgr)
                     log_running_tasks(
                         f"finish task={task.task_id} stage={stage.stage_id}"
                     )
@@ -446,7 +461,7 @@ class AsyncPipelineExecutor:
                     stages[task.stage_index].enqueue(retry_task)
                     record_retry(stage.stage_id)
                     if not result.retain_budget:
-                        await stage.release_budget(budget, self.manager)
+                        await stage.release_budget(budget, mgr)
                     log_running_tasks(
                         f"retry task={task.task_id} stage={stage.stage_id} "
                         f"retain_budget={result.retain_budget}"
@@ -455,7 +470,7 @@ class AsyncPipelineExecutor:
                     continue
 
                 if result is None:
-                    await stage.release_budget(budget, self.manager)
+                    await stage.release_budget(budget, mgr)
                     log_running_tasks(
                         f"finish task={task.task_id} stage={stage.stage_id}"
                     )
@@ -475,7 +490,7 @@ class AsyncPipelineExecutor:
                                 task.ctx.state.pin_req_id,
                             )
                             task.ctx.state.pin_req_id = None
-                        await stage.release_budget(budget, self.manager)
+                        await stage.release_budget(budget, mgr)
                         log_running_tasks(
                             f"finish task={task.task_id} stage={stage.stage_id}"
                         )
@@ -507,7 +522,7 @@ class AsyncPipelineExecutor:
                             JoinTracker(
                                 task.ctx,
                                 len(child_ctxs),
-                                manager=self.manager,
+                                manager=mgr,
                                 stage_id=stage.stage_id,
                                 reserved_budget=budget,
                                 on_release=release_deferred_parent,
@@ -518,13 +533,13 @@ class AsyncPipelineExecutor:
                         # Virtual pinning: children share the parent's prefix in the
                         # prefix cache; reserve it once until the last descendant ends.
                         shared_budget = min(budget, shared_tokens * self.manager.bytes_per_token)
-                        await stage.release_budget(budget - shared_budget, self.manager)
+                        await stage.release_budget(budget - shared_budget, mgr)
                         add_deferred_parent(stage.stage_id, shared_budget)
                         trackers = trackers + (
                             JoinTracker(
                                 task.ctx,
                                 len(child_ctxs),
-                                manager=self.manager,
+                                manager=mgr,
                                 stage_id=stage.stage_id,
                                 reserved_budget=shared_budget,
                                 on_release=release_deferred_parent,
@@ -546,7 +561,7 @@ class AsyncPipelineExecutor:
                             stages[next_stage_index].enqueue(child_task)
 
                     if not deferred_release:
-                        await stage.release_budget(budget, self.manager)
+                        await stage.release_budget(budget, mgr)
 
                     log_running_tasks(
                         f"finish task={task.task_id} stage={stage.stage_id} "
@@ -567,7 +582,7 @@ class AsyncPipelineExecutor:
                 else:
                     stages[next_stage_index].enqueue(next_task)
 
-                await stage.release_budget(budget, self.manager)
+                await stage.release_budget(budget, mgr)
                 log_running_tasks(
                     f"finish task={task.task_id} stage={stage.stage_id}"
                 )

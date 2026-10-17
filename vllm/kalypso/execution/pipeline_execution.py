@@ -10,8 +10,8 @@ from vllm.kalypso.sem_ops import OpBehavior, ops
 
 class PlanExecutor:
 
-    def __init__(self):
-        self.pipeline_executor = AsyncPipelineExecutor()
+    def __init__(self, pool=None, policy=None):
+        self.pipeline_executor = AsyncPipelineExecutor(pool=pool, policy=policy)
         self.blocking_executor = BlockingExecutor()
 
     async def execute(self, ctxs, plan):
@@ -147,8 +147,10 @@ class AsyncPipelineExecutor:
     # vLLM perform its own queueing, preemption, and KV-cache management.
     MEMORY_ADMISSION_CONTROL = True
 
-    def __init__(self):
+    def __init__(self, pool=None, policy=None):
         self.manager = KVMemoryManager.get_instance()
+        self.pool = pool
+        self.policy = policy
 
     async def execute_tasks(self, ctxs, stages):
         """

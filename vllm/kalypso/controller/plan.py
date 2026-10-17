@@ -16,9 +16,13 @@ class SemanticPlan:
         executor,
         virtual_pinning: bool = True,
         blocking: bool = False,
+        pool=None,
+        policy=None,
     ):
         self.executor = executor
-        self.plan_executor = PlanExecutor()
+        self.pool = pool
+        self.policy = policy
+        self.plan_executor = PlanExecutor(pool=pool, policy=policy)
         self.virtual_pinning = virtual_pinning
         self.blocking = blocking
 

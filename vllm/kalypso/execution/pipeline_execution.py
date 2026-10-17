@@ -217,23 +217,31 @@ class AsyncPipelineExecutor:
             if now - last_scheduler_log_at < self.LOG_SCHEDULER_INTERVAL_SEC:
                 return
             last_scheduler_log_at = now
-            # Small table per event, e.g.
-            # [sched] 08:03:11 finish task=12 stage=2
-            # stage   used/cap GB  wait   run
-            #     1   25.7/25.8     325     3  FULL
-            # FULL = has waiting tasks and memory >= 90% used.
+            # One row per stage per worker, e.g.
+            # [sched] 08:03:11 finish task=12 stage=1
+            # stage  worker   used/cap GB inflt  wait
+            #     1      w0     2.1/4.4       3    10
+            #     1      w1     1.8/4.4       2    10
+            # FULL = stage has waiting tasks and this worker's memory >= 90% used.
+            # `wait` is the stage's shared queue, so it repeats on each worker row.
+            mgrs = (
+                [(w.name, self.pool.manager(w)) for w in self.pool.workers]
+                if self.pool is not None
+                else [("-", self.manager)]
+            )
             lines = [
                 f"[sched] {time.strftime('%H:%M:%S')} {event}",
-                f"{'stage':>5} {'used/cap GB':>13} {'wait':>5} {'run':>5}",
+                f"{'stage':>5} {'worker':>7} {'used/cap GB':>13} {'inflt':>5} {'wait':>5}",
             ]
             for stage in stages:
-                used, cap = self.manager.stage_usage(stage.stage_id)
-                wait, run = len(stage.waiting_tasks), len(stage.running_tasks)
-                full = "  FULL" if cap > 0 and used >= 0.9 * cap and wait > 0 else ""
-                lines.append(
-                    f"{stage.stage_id:>5}   {used / 1e9:5.1f}/{cap / 1e9:<5.1f} "
-                    f"{wait:>5} {run:>5}{full}"
-                )
+                wait = len(stage.waiting_tasks)
+                for name, m in mgrs:
+                    used, cap = m.stage_usage(stage.stage_id)
+                    full = "  FULL" if cap > 0 and used >= 0.9 * cap and wait > 0 else ""
+                    lines.append(
+                        f"{stage.stage_id:>5} {name:>7} {used / 1e9:5.1f}/{cap / 1e9:<5.1f} "
+                        f"{m.stage_inflight(stage.stage_id):>5} {wait:>5}{full}"
+                    )
             print("\n".join(lines))
 
         async def finalize_task(task: Task):
@@ -266,6 +274,10 @@ class AsyncPipelineExecutor:
 
         async def rebalance_stage_capacity():
             if not self.MEMORY_ADMISSION_CONTROL:
+                return
+            if self.pool is not None:
+                # Not yet per worker: budgets stay at their registered split.
+                # Single-stage queries (filter + map) are unaffected.
                 return
 
             changed = False
@@ -317,8 +329,13 @@ class AsyncPipelineExecutor:
 
         def blocked_stage_details():
             details = {}
+            mgrs = self.pool.managers() if self.pool is not None else [self.manager]
             for stage in stages:
-                used, cap = self.manager.stage_usage(stage.stage_id)
+                # Summed over workers; `admissible` is approximate in pool mode.
+                used = cap = 0
+                for m in mgrs:
+                    u, c = m.stage_usage(stage.stage_id)
+                    used, cap = used + u, cap + c
                 head_task = stage.peek_task()
                 head_budget = None
                 head_task_id = None

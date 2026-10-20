@@ -34,10 +34,6 @@ class WorkerPool:
             raise ValueError("every worker needs its own KVMemoryManager")
         self.workers = workers
 
-    @classmethod
-    def single(cls, executor, manager, name="w0"):
-        """One worker wrapping the existing singleton manager and executor."""
-        return cls([Worker(name, executor, manager)])
 
     @classmethod
     def simulated(cls, n, executor, manager_factory):
@@ -49,10 +45,10 @@ class WorkerPool:
 
     
     @classmethod
-    async def discover(cls, specs, executor_factory, manager_factory):
+    async def discover(cls, specs, executor_factory, manager_factory, retries = 10, delay=2.0):
         import aiohttp
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
-            infos = await asyncio.gather(*(_fetch_with_retry(session, s.url) for s in specs))
+            infos = await asyncio.gather(*(_fetch_with_retry(session, s.url, retries, delay) for s in specs))
         models = {i["model"] for i in infos}
         if len(models) != 1:
             raise RuntimeError(f"workers must serve the same model, got {sorted(models)}")

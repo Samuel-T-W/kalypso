@@ -1,6 +1,7 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
+import asyncio
 
 
 
@@ -17,7 +18,7 @@ class Worker:
 
 
 class WorkerPool:
-    def __init__(self, workers, car):
+    def __init__(self, workers):
         workers = list(workers)
         if not workers:
             raise ValueError("a pool needs at least one worker")
@@ -45,6 +46,23 @@ class WorkerPool:
         manager_factory() must return a fresh KVMemoryManager each call.
         """
         return cls([Worker(f"w{i}", executor, manager_factory()) for i in range(n)])
+    
+    @classmethod
+    async def discover(cls, specs, executor_factory, manager_factory):
+        import aiohttp
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
+            infos = await asyncio.gather(*(_fetch_worker_info(session, s.url) for s in specs))
+
+        models = {i["model"] for i in infos}
+        if len(models) != 1:
+            raise RuntimeError(f"workers must serve the same model, got {sorted(models)}")
+        model = models.pop()
+
+        return cls([
+            Worker(s.name, executor_factory(s.url, model, s.name),
+                manager_factory(model, info["budget_bytes"]), url=s.url, model=model)
+            for s, info in zip(specs, infos)
+        ])
 
     def manager(self, w):
         return w.manager
@@ -60,6 +78,11 @@ class WorkerPool:
 
 
 
+
+async def _fetch_worker_info(session, url: str) -> dict:
+    async with session.get(f"{url}/v1/semantic/kv_budget") as resp:
+        resp.raise_for_status()
+        return await resp.json()
 
 
 

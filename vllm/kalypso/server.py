@@ -30,7 +30,7 @@ from vllm.kalypso.instrumentation import RequestRecorder, WorkerMetricsPoller
 from vllm.kalypso.query_processor import QueryProcessor
 from vllm.kalypso.workers.http_executor import HttpVLLMExecutor, unpin_owner
 from vllm.kalypso.workers.policy import make_policy
-from vllm.kalypso.workers.pool import WorkerPool, Worker
+from vllm.kalypso.workers.pool import WorkerPool, load_config, parse_urls
 
 
 class CoordinatorQueryProcessor(QueryProcessor):
@@ -80,10 +80,7 @@ class CoordinatorQueryProcessor(QueryProcessor):
         pass  # TODO(Milestone 3): per-worker stuck monitor over HTTP
 
 
-async def _fetch_worker_info(session, url: str) -> dict:
-    async with session.get(f"{url}/v1/semantic/kv_budget") as resp:
-        resp.raise_for_status()
-        return await resp.json()
+
 
 
 def build_app(args) -> FastAPI:
@@ -91,32 +88,17 @@ def build_app(args) -> FastAPI:
     async def lifespan(app: FastAPI):
         import aiohttp
 
-        urls = [u.strip().rstrip("/") for u in args.workers.split(",") if u.strip()]
-        if not urls:
-            raise ValueError("--workers needs at least one URL")
-
         recorder = RequestRecorder(args.record_path)
-
-        # Worker discovery / health check: each worker must answer kv_budget.
-        async with aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=30)
-        ) as session:
-            infos = await asyncio.gather(*(_fetch_worker_info(session, u) for u in urls))
-
-        models = {i["model"] for i in infos}
-        if len(models) != 1:
-            raise RuntimeError(f"workers must serve the same model, got {sorted(models)}")
-        model_name = models.pop()
-
         from vllm.kalypso.budget import KVMemoryManager
 
-        workers = []
-        for i, (url, info) in enumerate(zip(urls, infos)):
-            name = f"w{i}"
-            executor = HttpVLLMExecutor(url, model_name, name=name, recorder=recorder)
-            manager = KVMemoryManager(model_name, info["budget_bytes"], torch.float16)
-            workers.append(Worker(name, executor, manager, url=url))
-        pool = WorkerPool(workers)
+        specs = load_config(args.config).workers if args.config else parse_urls(args.workers)
+        pool = await WorkerPool.discover(
+            specs,
+            executor_factory=lambda url, model, name: HttpVLLMExecutor(url, model, name=name, recorder=recorder),
+            manager_factory=lambda model, budget: KVMemoryManager(model, budget, torch.float16),
+        )
+        workers = pool.workers
+        model_name = workers[0].model
 
         poller = WorkerMetricsPoller(
             {w.name: w.url for w in workers},
@@ -128,7 +110,7 @@ def build_app(args) -> FastAPI:
             ],
         )
 
-        total_budget = sum(i["budget_bytes"] for i in infos)
+        total_budget = pool.total_capacity()
         qp = CoordinatorQueryProcessor(
             model_name=model_name,
             budget=total_budget,
@@ -234,7 +216,9 @@ def main():
     p = argparse.ArgumentParser(description="Kalypso coordinator (multi-worker)")
     p.add_argument("--host", default="0.0.0.0")
     p.add_argument("--port", type=int, default=8000)
-    p.add_argument("--workers", required=True, help="comma-separated worker base URLs")
+    src = p.add_mutually_exclusive_group(required=True)
+    src.add_argument("--workers", help="comma-separated worker base URLs")
+    src.add_argument("--config", help="YAML/JSON worker pool config")
     p.add_argument("--policy", default="round_robin")
     p.add_argument("--record-path", default=None, help="JSONL file for instrumentation rows")
     p.add_argument("--poll-interval", type=float, default=0.5)

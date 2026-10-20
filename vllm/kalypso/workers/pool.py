@@ -46,13 +46,13 @@ class WorkerPool:
         manager_factory() must return a fresh KVMemoryManager each call.
         """
         return cls([Worker(f"w{i}", executor, manager_factory()) for i in range(n)])
+
     
     @classmethod
     async def discover(cls, specs, executor_factory, manager_factory):
         import aiohttp
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
-            infos = await asyncio.gather(*(_fetch_worker_info(session, s.url) for s in specs))
-
+            infos = await asyncio.gather(*(_fetch_with_retry(session, s.url) for s in specs))
         models = {i["model"] for i in infos}
         if len(models) != 1:
             raise RuntimeError(f"workers must serve the same model, got {sorted(models)}")
@@ -77,7 +77,21 @@ class WorkerPool:
        return sum(m.capacity() for m in self.managers())
 
 
-
+async def _fetch_with_retry(session, url, retries=10, delay=2.0):
+    """Workers may still be loading the model; keep trying for a while."""
+    for attempt in range(1, retries + 1):
+        try:
+            info = await _fetch_worker_info(session, url)
+            print(f"[WorkerPool] {url} ready: model={info['model']} "
+                  f"budget={info['budget_bytes'] / 1e9:.1f} GB")
+            return info
+        except Exception as e:
+            if attempt == retries:
+                print(f"[WorkerPool] {url} failed after {retries} attempts: {e!r}")
+                raise
+            print(f"[WorkerPool] {url} not ready (attempt {attempt}/{retries}): "
+                  f"{type(e).__name__}; retrying in {delay:.0f}s")
+            await asyncio.sleep(delay)
 
 async def _fetch_worker_info(session, url: str) -> dict:
     async with session.get(f"{url}/v1/semantic/kv_budget") as resp:

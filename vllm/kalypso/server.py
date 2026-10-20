@@ -30,7 +30,7 @@ from vllm.kalypso.instrumentation import RequestRecorder, WorkerMetricsPoller
 from vllm.kalypso.query_processor import QueryProcessor
 from vllm.kalypso.workers.http_executor import HttpVLLMExecutor, unpin_owner
 from vllm.kalypso.workers.policy import make_policy
-from vllm.kalypso.workers.stub_pool import StubPool, Worker
+from vllm.kalypso.workers.pool import WorkerPool, Worker
 
 
 class CoordinatorQueryProcessor(QueryProcessor):
@@ -116,7 +116,7 @@ def build_app(args) -> FastAPI:
             executor = HttpVLLMExecutor(url, model_name, name=name, recorder=recorder)
             manager = KVMemoryManager(model_name, info["budget_bytes"], torch.float16)
             workers.append(Worker(name, executor, manager, url=url))
-        pool = StubPool(workers)
+        pool = WorkerPool(workers)
 
         poller = WorkerMetricsPoller(
             {w.name: w.url for w in workers},

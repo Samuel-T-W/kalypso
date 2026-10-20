@@ -1577,10 +1577,10 @@ async def init_app_state(
         import torch
         from vllm.kalypso.budget import KVMemoryManager
         from vllm.kalypso.workers.policy import make_policy
-        from vllm.kalypso.workers.stub_pool import StubPool
+        from vllm.kalypso.workers.pool import WorkerPool
 
         qp = state.query_processor
-        qp.pool = StubPool.simulated(
+        qp.pool = WorkerPool.simulated(
             n_sim,
             qp.executor,
             lambda: KVMemoryManager(model_name, budget // n_sim, torch.float16),

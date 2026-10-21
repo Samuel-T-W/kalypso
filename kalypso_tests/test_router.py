@@ -20,9 +20,11 @@ router_mod = _load("kalypso_router", "router.py")
 class FakeExec:
     def __init__(self, name, log, gate=None):
         self.name, self.log, self.gate, self.fail = name, log, gate, False
+        self.determinism = []
 
-    async def execute(self, raw_request, prompt, max_tokens, pin=False, priority=0):
+    async def execute(self, raw_request, prompt, max_tokens, pin=False, priority=0, determinism=None):
         self.log.append(self.name)
+        self.determinism.append(determinism)
         if self.gate is not None:
             await self.gate.wait()
         if self.fail:
@@ -58,6 +60,18 @@ def test_round_robin_alternates_per_call():
         for _ in range(4):
             await r.execute(None, "p", 8)
         assert log == ["w0", "w1", "w0", "w1"]
+    asyncio.run(go())
+
+
+def test_execute_passes_determinism_to_the_chosen_worker():
+    async def go():
+        r, log = make()
+        strategy = object()
+        await r.execute(None, "p", 8, determinism=strategy)
+        await r.execute(None, "p", 8)
+        assert log == ["w0", "w1"]
+        assert r.workers[0].executor.determinism == [strategy]
+        assert r.workers[1].executor.determinism == [None]
     asyncio.run(go())
 
 

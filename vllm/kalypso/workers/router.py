@@ -37,7 +37,7 @@ class CallRouter:
                 return w
         return None
 
-    async def _route(self, method, raw_request, prompt, max_tokens, pin, priority):
+    async def _route(self, method, raw_request, prompt, max_tokens, pin, priority, **extra):
         budget = self.budget_fn(prompt, max_tokens)
         async with self._cond:
             w = self._try_reserve(budget)
@@ -47,7 +47,7 @@ class CallRouter:
         try:
             return await getattr(w.executor, method)(
                 raw_request=raw_request, prompt=prompt, max_tokens=max_tokens,
-                pin=pin, priority=priority,
+                pin=pin, priority=priority, **extra,
             )
         finally:
             async with self._cond:
@@ -55,8 +55,11 @@ class CallRouter:
                 self.inflight[w.name] -= 1
                 self._cond.notify_all()
 
-    async def execute(self, raw_request, prompt, max_tokens, pin=False, priority=0):
-        return await self._route("execute", raw_request, prompt, max_tokens, pin, priority)
+    async def execute(self, raw_request, prompt, max_tokens, pin=False, priority=0, determinism=None):
+        # The chosen worker's executor applies determinism to its reply.
+        return await self._route(
+            "execute", raw_request, prompt, max_tokens, pin, priority, determinism=determinism
+        )
 
     async def complete(self, *, raw_request, prompt, max_tokens, pin=False, priority=0):
         return await self._route("complete", raw_request, prompt, max_tokens, pin, priority)

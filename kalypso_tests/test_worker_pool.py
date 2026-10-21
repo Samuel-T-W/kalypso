@@ -126,11 +126,16 @@ class FakeVLLM:
     """Answers /v1/semantic/kv_budget like a Kalypso worker. The first
     `down_for` calls return 503, as if the model were still loading."""
 
-    def __init__(self, model="qwen", budget=1000, down_for=0):
+    def __init__(self, model="qwen", budget=1000, down_for=0, served_ids=None):
         self.model, self.budget, self.down_for = model, budget, down_for
+        self.served_ids = [model] if served_ids is None else served_ids
         self.calls = 0
         self.app = web.Application()
         self.app.router.add_get("/v1/semantic/kv_budget", self.kv_budget)
+        self.app.router.add_get("/v1/models", self.models)
+
+    async def models(self, req):
+        return web.json_response({"data": [{"id": m} for m in self.served_ids]})
 
     async def kv_budget(self, req):
         self.calls += 1
@@ -155,10 +160,10 @@ async def discover(fakes, **kw):
     try:
         specs = pool.parse_urls([f.url for f in fakes])
         kw.setdefault("delay", 0.01)  # keep retries fast in tests
+        kw.setdefault("executor_factory", lambda url, model, name: f"exec:{name}")
+        kw.setdefault("manager_factory", lambda model, budget: FakeManager(capacity=budget))
         return await pool.WorkerPool.discover(
             specs,
-            executor_factory=lambda url, model, name: f"exec:{name}",
-            manager_factory=lambda model, budget: FakeManager(capacity=budget),
             **kw,
         )
     finally:
@@ -173,6 +178,33 @@ def test_discover_builds_one_worker_per_server():
     assert p.total_capacity() == 4000
     assert all(w.model == "qwen" for w in p.workers)
     assert p.workers[1].executor == "exec:w1"
+
+
+def test_discover_uses_first_served_id_for_workers_and_factories():
+    managers = []
+
+    def manager_factory(model, budget):
+        managers.append((model, budget))
+        return FakeManager(capacity=budget)
+
+    p = run(discover([
+        FakeVLLM(model="/cache/a", budget=1000, served_ids=["served-qwen", "alias"]),
+        FakeVLLM(model="/cache/b", budget=3000, served_ids=["served-qwen"]),
+    ], executor_factory=lambda url, model, name: model, manager_factory=manager_factory))
+    assert [w.model for w in p.workers] == ["served-qwen", "served-qwen"]
+    assert [w.executor for w in p.workers] == ["served-qwen", "served-qwen"]
+    assert [w.model_path for w in p.workers] == ["/cache/a", "/cache/b"]
+    assert managers == [("/cache/a", 1000), ("/cache/b", 3000)]
+
+
+def test_discover_rejects_different_served_ids_even_with_same_model_path():
+    with pytest.raises(RuntimeError, match="same model"):
+        run(discover([FakeVLLM(served_ids=["a"]), FakeVLLM(served_ids=["b"])]))
+
+
+def test_discover_rejects_empty_model_list():
+    with pytest.raises(ValueError, match="model"):
+        run(discover([FakeVLLM(served_ids=[])], retries=1))
 
 
 def test_discover_retries_until_worker_is_up():

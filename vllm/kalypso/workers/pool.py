@@ -6,12 +6,13 @@ import asyncio
 
 
 class Worker:
-    def __init__(self, name, executor, manager, url=None, model = None):
+    def __init__(self, name, executor, manager, url=None, model = None, model_path=None):
         self.name = name
         self.executor = executor
         self.manager = manager
         self.url = url
         self.model = model
+        self.model_path = model_path if model_path is not None else model
 
     def __repr__(self):
         return f"Worker({self.name})"
@@ -56,7 +57,8 @@ class WorkerPool:
 
         return cls([
             Worker(s.name, executor_factory(s.url, model, s.name),
-                manager_factory(model, info["budget_bytes"]), url=s.url, model=model)
+                manager_factory(info["model_path"], info["budget_bytes"]),
+                url=s.url, model=model, model_path=info["model_path"])
             for s, info in zip(specs, infos)
         ])
 
@@ -92,7 +94,15 @@ async def _fetch_with_retry(session, url, retries=10, delay=2.0):
 async def _fetch_worker_info(session, url: str) -> dict:
     async with session.get(f"{url}/v1/semantic/kv_budget") as resp:
         resp.raise_for_status()
-        return await resp.json()
+        info = await resp.json()
+    async with session.get(f"{url}/v1/models") as resp:
+        resp.raise_for_status()
+        models = (await resp.json())["data"]
+    if not models or not models[0].get("id"):
+        raise ValueError(f"worker {url} returned no served model id")
+    info["model_path"] = info["model"]
+    info["model"] = models[0]["id"]
+    return info
 
 
 

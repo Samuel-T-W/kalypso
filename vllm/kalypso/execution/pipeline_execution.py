@@ -5,6 +5,7 @@ import time
 from vllm.kalypso.budget import KVMemoryManager
 from vllm.kalypso.context import RetryTaskResult
 from vllm.kalypso.controller.stage import Task
+from vllm.kalypso.instrumentation import request_meta
 from vllm.kalypso.sem_ops import OpBehavior, ops
 from vllm.kalypso.workers.policy import admit, RoundRobinPolicy
 
@@ -32,7 +33,15 @@ class PlanExecutor:
                     f"input_tuples={input_count}"
                 )
                 try:
-                    ctxs = await item(ctxs)
+                    # Blocking operators have no pipeline stage; use their
+                    # plan position as the identifier for the whole path.
+                    with request_meta(
+                        operator=operator_name,
+                        stage=item.position,
+                        position=item.position,
+                        row_idx=None,
+                    ):
+                        ctxs = await item(ctxs)
                 except Exception as exc:
                     elapsed = time.perf_counter() - started_at
                     print(

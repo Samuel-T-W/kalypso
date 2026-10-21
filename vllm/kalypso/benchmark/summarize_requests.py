@@ -14,7 +14,7 @@ from collections import defaultdict
 
 def _pct(xs, q):
     xs = sorted(xs)
-    return xs[min(len(xs) - 1, int(q * len(xs)))] if xs else float("nan")
+    return xs[min(len(xs) - 1, int(q * len(xs)))] if xs else 0.0
 
 
 def load(path):
@@ -31,27 +31,33 @@ def load(path):
 
 def summarize(reqs, samples):
     ok = [r for r in reqs if r["status"] == "ok"]
-    if not ok:
+    if not reqs:
         return {}
-    window = max(r["finish_t"] for r in ok) - min(r["submit_t"] for r in ok)
+    window = (
+        max(r["finish_t"] for r in ok) - min(r["submit_t"] for r in ok)
+        if ok else 0
+    )
     by = defaultdict(list)
-    for r in ok:
+    for r in reqs:
         by[r["worker"]].append(r)
     depth = defaultdict(float)
     for s in samples:
         depth[s["worker"]] = max(depth[s["worker"]], s["waiting"] + s["running"])
     out = {}
-    for w, rs in sorted(by.items()):
+    for w, rows in sorted(by.items()):
+        rs = [r for r in rows if r["status"] == "ok"]
         lat = [r["finish_t"] - r["submit_t"] for r in rs]
         out[w] = {
             "requests": len(rs),
-            "errors": sum(1 for r in reqs if r["worker"] == w and r["status"] != "ok"),
+            "errors": len(rows) - len(rs),
             "lat_p50_s": _pct(lat, 0.50),
             "lat_p99_s": _pct(lat, 0.99),
-            "lat_mean_s": statistics.fmean(lat),
+            "lat_mean_s": statistics.fmean(lat) if lat else 0.0,
             "prompt_tokens": sum(r["prompt_tokens"] or 0 for r in rs),
             "completion_tokens": sum(r["completion_tokens"] or 0 for r in rs),
-            "throughput_rps": len(rs) / window if window > 0 else float("nan"),
+            "throughput_rps": (
+                len(rs) / window if window > 0 else (float("nan") if rs else 0.0)
+            ),
             "peak_queue_depth": depth.get(w),
         }
     return out

@@ -28,7 +28,8 @@ from vllm.kalypso import interface
 from vllm.kalypso import query as query_mod
 from vllm.kalypso.instrumentation import RequestRecorder, WorkerMetricsPoller
 from vllm.kalypso.query_processor import QueryProcessor
-from vllm.kalypso.workers.http_executor import HttpVLLMExecutor, unpin_owner
+from vllm.kalypso.results import format_results
+from vllm.kalypso.workers.http_executor import HttpVLLMExecutor
 from vllm.kalypso.workers.policy import make_policy
 from vllm.kalypso.workers.pool import WorkerPool, load_config, parse_urls
 from vllm.kalypso.workers.router import CallRouter
@@ -37,18 +38,17 @@ from vllm.kalypso.workers.router import CallRouter
 class CoordinatorQueryProcessor(QueryProcessor):
     """QueryProcessor with the in-process vLLM engine calls replaced by HTTP.
 
-    Three places in QueryProcessor reach into a local engine; each is
-    overridden here:
-      * _kv_metric_snapshot: read the local Prometheus registry. Now sums the
-        counters most recently scraped from every worker's /metrics.
-      * _cleanup_query_pins: called engine_core.unpin_requests locally. Now
-        routes each pin to the worker that owns it.
-      * start_stuck_monitor: polled the local scheduler. Disabled for now; the
-        per-worker stuck monitor (Milestone 3) replaces it.
+    KV snapshots sum fresh counters scraped from every worker's /metrics.
     """
 
-    def __init__(self, *, poller: WorkerMetricsPoller, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, *, poller: WorkerMetricsPoller, model_name, model_path=None, **kwargs):
+        if not kwargs.get("virtual_pinning", True):
+            raise ValueError(
+                "Coordinator requires virtual_pinning=True; HTTP workers do not support real pinning"
+            )
+        # Served aliases need not be valid tokenizer/config paths.
+        super().__init__(model_name=model_path or model_name, **kwargs)
+        self.model_name = model_name
         self.poller = poller
 
     # -- metrics -------------------------------------------------------------
@@ -65,23 +65,9 @@ class CoordinatorQueryProcessor(QueryProcessor):
         )
         return snap
 
-    async def execute(self, raw_request, query, blocking=None):
-        await self.poller.poll_once()  # fresh "before" snapshot
-        return await super().execute(raw_request, query, blocking=blocking)
-
-    # -- pins ----------------------------------------------------------------
-    async def _cleanup_query_pins(self, raw_request, owner_key: str):
-        count = await unpin_owner(owner_key)
-        if count:
-            print(f"[Coordinator] query finished; unpinned {count} pinned requests")
-        # Called right before the "after" KV snapshot, so refresh here.
+    async def _query_kv_snapshot(self):
         await self.poller.poll_once()
-
-    def start_stuck_monitor(self, engine_client):
-        pass  # TODO(Milestone 3): per-worker stuck monitor over HTTP
-
-
-
+        return self._kv_metric_snapshot()
 
 
 def build_app(args) -> FastAPI:
@@ -131,6 +117,7 @@ def build_app(args) -> FastAPI:
 
         qp = CoordinatorQueryProcessor(
             model_name=model_name,
+            model_path=workers[0].model_path,
             budget=total_budget,
             pool=qp_pool,
             policy=qp_policy,
@@ -157,6 +144,7 @@ def build_app(args) -> FastAPI:
             recorder.close()
 
     app = FastAPI(lifespan=lifespan)
+    app.state.query_lock = asyncio.Lock()
 
     @app.get("/v1/semantic/healthz")
     async def healthz(raw_request: Request):
@@ -193,28 +181,12 @@ def build_app(args) -> FastAPI:
         started = asyncio.get_running_loop().time()
         _query = query_mod.Query(sem_request.ops, sem_request.data_path)
         processor = raw_request.app.state.query_processor
-        out_ctxs = await processor.execute(
-            raw_request, _query, blocking=sem_request.blocking
-        )
-
-        results = []
-        for ctx in out_ctxs:
-            outputs = []
-            for item in ctx.output:
-                if isinstance(item, dict) and len(item) == 1:
-                    op_name, value = next(iter(item.items()))
-                    outputs.append({"op": op_name, "value": value})
-                else:
-                    outputs.append({"op": "unknown", "value": item})
-            results.append(
-                {
-                    "idx": getattr(ctx.state, "idx", None),
-                    "worker": getattr(getattr(ctx.state, "worker", None), "name", None),
-                    "input_context": getattr(ctx.input, "data", None),
-                    "right_input_context": getattr(ctx.input, "right_data", None),
-                    "outputs": outputs,
-                }
+        async with raw_request.app.state.query_lock:
+            out_ctxs = await processor.execute(
+                raw_request, _query, blocking=sem_request.blocking
             )
+
+        results = format_results(out_ctxs)
 
         elapsed = asyncio.get_running_loop().time() - started
         return {

@@ -571,33 +571,6 @@ async def semantic_kv_budget(raw_request: Request):
     }
 
 
-@router.post("/v1/semantic/kv/unpin")
-async def semantic_kv_unpin(payload: UnpinPinnedRequestsRequest, raw_request: Request):
-    """Unpin the given request ids. Unlike /v1/semantic/pinned/unpin this does
-    not consult the local PinnedRequestRegistry, because with a remote
-    coordinator the pin bookkeeping lives on the coordinator."""
-    request_ids = payload.request_ids or []
-    if request_ids:
-        try:
-            await asyncio.wait_for(
-                raw_request.app.state.engine_client.engine_core.call_utility_async(
-                    "unpin_requests", request_ids
-                ),
-                timeout=5.0,
-            )
-        except asyncio.TimeoutError:
-            return JSONResponse(status_code=504, content={"error": "engine_unresponsive"})
-    return {"unpinned_count": len(request_ids)}
-
-
-@router.post("/v1/semantic/kv/abort")
-async def semantic_kv_abort(payload: dict, raw_request: Request):
-    request_id = payload.get("request_id")
-    if request_id:
-        await raw_request.app.state.engine_client.abort(request_id)
-    return {"aborted": request_id}
-
-
 @router.get("/v1/semantic/pinned")
 async def get_pinned_requests(raw_request: Request):
     pinned_requests = PinnedRequestRegistry.instance().list()
@@ -678,6 +651,7 @@ async def unpin_pinned_requests(
 
 from vllm.kalypso import query_processor, query, interface
 from vllm.kalypso.pin_registry import PinnedRequestRegistry
+from vllm.kalypso.results import format_results
 @router.post("/v1/semantic/query")
 async def semantic_query(
     sem_request: interface.SemanticQueryRequest,
@@ -705,25 +679,7 @@ async def semantic_query(
         # are the client's fault.
         raise HTTPException(status_code=400, detail=str(e)) from e
 
-    results = []
-    for ctx in out_ctxs:
-        outputs = []
-        for item in ctx.output:
-            if isinstance(item, dict) and len(item) == 1:
-                op_name, value = next(iter(item.items()))
-                outputs.append({"op": op_name, "value": value})
-            else:
-                outputs.append({"op": "unknown", "value": item})
-
-        results.append(
-            {
-                "idx": getattr(ctx.state, "idx", None),
-                "worker": getattr(getattr(ctx.state, "worker", None), "name", None),   
-                "input_context": getattr(ctx.input, "data", None),
-                "right_input_context": getattr(ctx.input, "right_data", None),
-                "outputs": outputs,
-            }
-        )
+    results = format_results(out_ctxs)
 
     elapsed = asyncio.get_running_loop().time() - started
     return {

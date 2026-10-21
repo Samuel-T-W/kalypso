@@ -3,14 +3,12 @@
 from types import SimpleNamespace
 
 import pytest
-from test_http_executor import FakeWorker, http, instr, run
-
-from vllm.kalypso.execution.determinism import BOOLEAN
+from test_http_executor import FakeWorker, det, http, instr, run
 
 
 @pytest.fixture
 def worker_call():
-    async def call(*, pin=False):
+    async def call():
         worker = FakeWorker()
         await worker.start()
         recorder = instr.RequestRecorder()
@@ -18,12 +16,10 @@ def worker_call():
         request = SimpleNamespace()
         try:
             result = await executor.execute(
-                request, "hello", 8, pin=pin, determinism=BOOLEAN
+                request, "hello", 8, determinism=det.BOOLEAN
             )
             return result, recorder.rows("request")
         finally:
-            if pin:
-                await http.unpin_owner(str(id(request)))
             await executor.close()
             await worker.stop()
 
@@ -40,14 +36,6 @@ def test_seeded_http_reply_preserves_real_request_record(monkeypatch, worker_cal
         2,
         "ok",
     )
-
-
-def test_seeded_http_pin_reply_is_untouched(monkeypatch, worker_call):
-    monkeypatch.setenv("KALYPSO_COIN_FLIP_SEED", "2")
-    result, (row,) = run(worker_call(pin=True))
-    assert (result.text, result.finish_reason) == ("yes", "stop")
-    assert result.request_id == row["request_id"]
-    assert row["pin"] is True
 
 
 def test_unseeded_http_reply_is_untouched(monkeypatch, worker_call):

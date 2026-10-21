@@ -5,12 +5,15 @@ executor imports are loaded from their files under stub package names.
 """
 import asyncio
 import importlib.util
+import json
 import pathlib
+import re
 import sys
 import types
 from types import SimpleNamespace as NS
 
-from aiohttp import web
+import pytest
+from aiohttp import ClientConnectionError, web
 
 _kal = pathlib.Path(__file__).resolve().parents[1] / "vllm/kalypso"
 
@@ -26,7 +29,7 @@ def _load(name, path):
 def _import_under_stubs():
     names = [
         "vllm", "vllm.kalypso", "vllm.kalypso.execution",
-        "vllm.kalypso.execution.executor", "vllm.kalypso.pin_registry",
+        "vllm.kalypso.execution.executor", "vllm.kalypso.execution.determinism",
         "vllm.kalypso.instrumentation", "vllm.kalypso.workers",
         "vllm.kalypso.workers.http_executor",
     ]
@@ -35,10 +38,10 @@ def _import_under_stubs():
         sys.modules[n] = types.ModuleType(n)
     try:
         _load("vllm.kalypso.execution.executor", _kal / "execution/executor.py")
-        _load("vllm.kalypso.pin_registry", _kal / "pin_registry.py")
+        det = _load("vllm.kalypso.execution.determinism", _kal / "execution/determinism.py")
         instr = _load("vllm.kalypso.instrumentation", _kal / "instrumentation.py")
         http = _load("vllm.kalypso.workers.http_executor", _kal / "workers/http_executor.py")
-        return instr, http
+        return instr, http, det
     finally:
         for n, m in saved.items():
             if m is None:
@@ -47,7 +50,7 @@ def _import_under_stubs():
                 sys.modules[n] = m
 
 
-instr, http = _import_under_stubs()
+instr, http, det = _import_under_stubs()
 
 METRICS = """\
 # TYPE vllm:num_requests_waiting gauge
@@ -62,15 +65,12 @@ vllm:prefix_cache_hits_total{engine="0",model_name="m"} 40.0
 
 class FakeWorker:
     def __init__(self):
-        self.unpinned: list[list[str]] = []
-        self.aborted: list[str] = []
         self.posts: list[dict] = []
+        self.delay_s = 0
         self.n = 0
         app = web.Application()
         app.router.add_post("/v1/completions", self.completions)
         app.router.add_post("/v1/chat/completions", self.chat)
-        app.router.add_post("/v1/semantic/kv/unpin", self.unpin)
-        app.router.add_post("/v1/semantic/kv/abort", self.abort)
         app.router.add_get("/metrics", self.metrics)
         self.app = app
 
@@ -92,6 +92,7 @@ class FakeWorker:
     async def completions(self, req):
         body = await req.json()
         self.posts.append(body)
+        await asyncio.sleep(self.delay_s)
         if body["prompt"] == "boom":
             return web.Response(status=500, text="engine exploded")
         return web.json_response({
@@ -103,19 +104,12 @@ class FakeWorker:
     async def chat(self, req):
         body = await req.json()
         self.posts.append(body)
+        await asyncio.sleep(self.delay_s)
         return web.json_response({
             "id": self._next_id(),
             "choices": [{"message": {"content": "hello"}, "finish_reason": "stop"}],
             "usage": {"prompt_tokens": 11, "completion_tokens": 3},
         })
-
-    async def unpin(self, req):
-        self.unpinned.append((await req.json())["request_ids"])
-        return web.json_response({"unpinned_count": len(self.unpinned[-1])})
-
-    async def abort(self, req):
-        self.aborted.append((await req.json())["request_id"])
-        return web.json_response({})
 
     async def metrics(self, req):
         return web.Response(text=METRICS)
@@ -139,6 +133,7 @@ def test_completion_and_chat_roundtrip_with_records():
                 prompt=[{"role": "user", "content": "hi"}],
                 max_tokens=8,
             )
+            assert ex._session.timeout.total == 600
         finally:
             await ex.close()
             await fw.stop()
@@ -146,7 +141,7 @@ def test_completion_and_chat_roundtrip_with_records():
         assert r2.text == "hello"
         # same sampling settings as VLLMExecutor
         assert fw.posts[0]["temperature"] == 0.0 and fw.posts[0]["seed"] == 42
-        assert fw.posts[0]["vllm_xargs"] == {"pinned": False}
+        assert all("vllm_xargs" not in post for post in fw.posts)
         rows = rec.rows("request")
         assert len(rows) == 2
         a, b = rows
@@ -182,33 +177,70 @@ def test_error_is_raised_and_recorded():
     run(go())
 
 
-def test_pin_and_unpin_route_to_owning_worker():
+@pytest.mark.parametrize("chat", [False, True])
+def test_timeout_reports_worker_elapsed_and_bounded_prompt(chat):
     async def go():
-        w0, w1 = FakeWorker(), FakeWorker()
-        await w0.start()
-        await w1.start()
-        e0 = http.HttpVLLMExecutor(w0.url, "m", name="w0")
-        e1 = http.HttpVLLMExecutor(w1.url, "m", name="w1")
-        req = NS()  # stands in for raw_request; owner key is id(req)
+        fw = FakeWorker()
+        fw.delay_s = 0.1
+        await fw.start()
+        rec = instr.RequestRecorder()
+        ex = http.HttpVLLMExecutor(fw.url, "m", recorder=rec, timeout_s=0.01)
+        text = "slow prompt " + "x" * 250 + "DO_NOT_INCLUDE"
+        prompt = [{"role": "user", "content": text}] if chat else text
         try:
-            r0 = await e0.execute(raw_request=req, prompt="a", max_tokens=4, pin=True)
-            r1 = await e1.execute(raw_request=req, prompt="b", max_tokens=4, pin=True)
-            r2 = await e1.execute(raw_request=req, prompt="c", max_tokens=4, pin=True)
-            # explicit unpin goes only to the worker that holds the pin
-            await e1.unpin(req, r2.request_id)
-            assert w1.unpinned == [[r2.request_id]] and w0.unpinned == []
-            # query-exit cleanup reaches each remaining pin on its own worker
-            n = await http.unpin_owner(str(id(req)))
+            with instr.request_meta(operator="SemFilter", row_idx=5):
+                with pytest.raises(http.WorkerRequestError) as caught:
+                    await ex.execute(NS(), prompt, 4)
         finally:
-            await e0.close()
-            await e1.close()
-            await w0.stop()
-            await w1.stop()
-        assert n == 2
-        assert w0.unpinned == [[r0.request_id]]
-        assert w1.unpinned[-1] == [r1.request_id]
-        # nothing left registered
-        assert http.PinnedRequestRegistry.instance().list_by_owner(str(id(req))) == []
+            await ex.close()
+            await fw.stop()
+        message = str(caught.value)
+        path = "/v1/chat/completions" if chat else "/v1/completions"
+        assert fw.url + path in message
+        elapsed = re.search(r"after ([0-9.]+)s", message)
+        assert elapsed and float(elapsed.group(1)) >= 0.01
+        excerpt = message.split("prompt=", 1)[1]
+        expected = (json.dumps(prompt) if chat else prompt)[:200]
+        assert excerpt == repr(expected)
+        assert "DO_NOT_INCLUDE" not in message
+        assert isinstance(caught.value.__cause__, asyncio.TimeoutError)
+        (row,) = rec.rows("request")
+        assert (row["status"], row["operator"], row["row_idx"]) == ("error", "SemFilter", 5)
+        assert row["error"] == repr(caught.value)
+
+    run(go())
+
+
+def test_connection_failure_reports_context_and_original_cause():
+    async def go():
+        cause = ClientConnectionError("connection reset")
+
+        class BrokenSession:
+            def post(self, *args, **kwargs):
+                raise cause
+
+        ex = http.HttpVLLMExecutor("http://worker:8000", "m", session=BrokenSession())
+        with pytest.raises(http.WorkerRequestError) as caught:
+            await ex.execute(NS(), "hello worker", 4)
+        message = str(caught.value)
+        assert "http://worker:8000/v1/completions" in message
+        assert re.search(r"after [0-9.]+s", message)
+        assert "prompt='hello worker'" in message
+        assert caught.value.__cause__ is cause
+
+    run(go())
+
+
+@pytest.mark.parametrize("method", ["execute", "complete", "chatcomplete", "unpin", "abort"])
+def test_pinning_and_abort_are_not_supported(method):
+    async def go():
+        ex = http.HttpVLLMExecutor("http://worker:8000", "m")
+        with pytest.raises(NotImplementedError):
+            if method in ("unpin", "abort"):
+                await getattr(ex, method)(NS(), "cmpl-1")
+            else:
+                await getattr(ex, method)(raw_request=NS(), prompt="hello", max_tokens=4, pin=True)
+        assert ex._session is None
 
     run(go())
 

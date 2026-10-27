@@ -31,3 +31,13 @@ It also checks non-pin calls exactly once with successful status and full input 
 The launcher clears `requests.jsonl` in the output directory at start; send exactly one candidate query per launch because the recorder appends.
 Exit status is 0 on success and 1 on failure; `run` and `check` remain available separately.
 Omit `--detach` to keep the launcher attached; Ctrl-C stops its child processes.
+
+## Compare against the old checkout
+
+Run `vllm/kalypso/benchmark/compare_old_new.sh -n 2 -p round_robin -o ./kalypso_old_vs_new` to compare old single-server Kalypso against N coordinator workers on this checkout, with the same payload, model, and seed (default 42).
+The old side is `samuel/old-seeded-baseline` (team `main` plus seeded replies); run `git fetch` first, since the script also tries `REMOTE/samuel/old-seeded-baseline` for each remote.
+The script checks that ref out as a detached worktree in `OUT_DIR/src_old` and copies this checkout's compiled `vllm/**/*.so` into it; pass `--old-ref REF` for another seeded commit, or `--old DIR` to use an existing checkout.
+An existing `src_old` must be a clean worktree at the same commit; an explicitly empty `KALYPSO_COIN_FLIP_SEED` is rejected.
+The script prints both commits, stops and waits for the old server before starting the new side, and cleans up servers on exit.
+Results are saved as `old.json`, `new.json`, their input CSVs, `old_server.log`, and `new_run/` with request records and logs; the exit status comes from harness `check` using old as baseline.
+Use `--help` for payload, model, port, and output options; relative paths resolve from this checkout's root.

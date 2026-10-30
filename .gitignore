@@ -235,3 +235,6 @@ ep_kernels_workspace/
 !vllm/benchmarks/lib/
 
 vllm/kalypso/data/json
+
+# Modal sweep downloads
+/kalypso_modal_run/

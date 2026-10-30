@@ -1,0 +1,13 @@
+model: Qwen/Qwen2.5-0.5B-Instruct
+hardware: {gpu_type: A10}
+n_workers: [2]
+policies: [round_robin]
+workloads:
+  - {name: fever, rows: 20}
+reps: 1
+reset_prefix_cache: true
+vllm: {max_model_len: 32768, gpu_memory_utilization: 0.95, extra_args: []}
+instrumentation:
+  record_requests: true
+  poll_interval: null
+  kv_cache_metrics_sample: null

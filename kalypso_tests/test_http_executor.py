@@ -13,7 +13,7 @@ import types
 from types import SimpleNamespace as NS
 
 import pytest
-from aiohttp import ClientConnectionError, web
+from aiohttp import ClientConnectionError, ServerDisconnectedError, web
 
 _kal = pathlib.Path(__file__).resolve().parents[1] / "vllm/kalypso"
 
@@ -134,6 +134,7 @@ def test_completion_and_chat_roundtrip_with_records():
                 max_tokens=8,
             )
             assert ex._session.timeout.total == 600
+            assert ex._session.connector._keepalive_timeout < 5
         finally:
             await ex.close()
             await fw.stop()
@@ -211,12 +212,47 @@ def test_timeout_reports_worker_elapsed_and_bounded_prompt(chat):
     run(go())
 
 
-def test_connection_failure_reports_context_and_original_cause():
+def test_disconnect_retries_once_and_records_one_success(monkeypatch):
     async def go():
-        cause = ClientConnectionError("connection reset")
+        fw = FakeWorker()
+        await fw.start()
+        rec = instr.RequestRecorder()
+        ex = http.HttpVLLMExecutor(fw.url, "m", recorder=rec)
+        attempts = 0
+        try:
+            session = await ex._get_session()
+            post = session.post
+
+            def disconnect_once(*args, **kwargs):
+                nonlocal attempts
+                attempts += 1
+                if attempts == 1:
+                    raise ServerDisconnectedError("Server disconnected")
+                return post(*args, **kwargs)
+
+            monkeypatch.setattr(session, "post", disconnect_once)
+            result = await ex.complete(raw_request=NS(), prompt="is it true?", max_tokens=8)
+        finally:
+            await ex.close()
+            await fw.stop()
+        assert (result.text, result.finish_reason) == ("yes", "stop")
+        assert attempts == 2
+        (row,) = rec.rows("request")
+        assert row["status"] == "ok"
+
+    run(go())
+
+
+@pytest.mark.parametrize("error, attempts", [(ServerDisconnectedError, 2), (ClientConnectionError, 1)])
+def test_connection_failure_reports_context_and_original_cause(error, attempts):
+    async def go():
+        cause = error("connection reset")
 
         class BrokenSession:
+            posts = 0
+
             def post(self, *args, **kwargs):
+                self.posts += 1
                 raise cause
 
         ex = http.HttpVLLMExecutor("http://worker:8000", "m", session=BrokenSession())
@@ -227,6 +263,7 @@ def test_connection_failure_reports_context_and_original_cause():
         assert re.search(r"after [0-9.]+s", message)
         assert "prompt='hello worker'" in message
         assert caught.value.__cause__ is cause
+        assert ex._session.posts == attempts
 
     run(go())
 

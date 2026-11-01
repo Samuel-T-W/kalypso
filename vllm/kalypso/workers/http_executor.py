@@ -50,9 +50,10 @@ class HttpVLLMExecutor(LLMExecutor):
             import aiohttp
 
             # Bound call duration; KV admission already bounds concurrency.
+            # Drop idle connections before vLLM's 5s keep-alive closes them.
             self._session = aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(total=self.timeout_s),
-                connector=aiohttp.TCPConnector(limit=0),
+                connector=aiohttp.TCPConnector(limit=0, keepalive_timeout=4),
             )
         return self._session
 
@@ -62,17 +63,24 @@ class HttpVLLMExecutor(LLMExecutor):
             self._session = None
 
     async def _post(self, path: str, payload: dict) -> dict:
+        import aiohttp
+
         submit_t = time.monotonic()
         url = self.base_url + path
         try:
             session = await self._get_session()
-            async with session.post(url, json=payload) as resp:
-                body = await resp.text()
-                if resp.status >= 300:
-                    raise WorkerRequestError(
-                        f"{self.name} {path} -> HTTP {resp.status}: {body[:300]}"
-                    )
-                return json.loads(body)
+            for attempt in range(2):
+                try:
+                    async with session.post(url, json=payload) as resp:
+                        body = await resp.text()
+                        if resp.status >= 300:
+                            raise WorkerRequestError(
+                                f"{self.name} {path} -> HTTP {resp.status}: {body[:300]}"
+                            )
+                        return json.loads(body)
+                except aiohttp.ServerDisconnectedError:
+                    if attempt == 1:
+                        raise
         except WorkerRequestError:
             raise
         except asyncio.CancelledError:

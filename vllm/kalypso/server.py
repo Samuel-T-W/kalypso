@@ -110,7 +110,8 @@ def build_app(args) -> FastAPI:
             router = CallRouter(
                 pool, policy,
                 lambda prompt, max_tokens: (
-                    KVMemoryManager.get_instance().token_length(prompt) + max_tokens
+                    KVMemoryManager.get_instance().token_length(prompt)
+                    + min(max_tokens, HttpVLLMExecutor.MAX_TOKENS_CAP)
                 ) * KVMemoryManager.get_instance().bytes_per_token,
             )
             qp_pool, qp_policy, executor = None, None, router

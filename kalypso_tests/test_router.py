@@ -197,22 +197,33 @@ def test_router_cost_tracks_reserved_bytes():
         assert r.cost(w0) == 0
     asyncio.run(go())
 
-
-def test_executor_sees_the_reserved_cost():
+def test_call_scope_wraps_each_call_with_its_cost():
     async def go():
-        seen = []
+        events = []
+
+        class Scope:
+            def __init__(self, cost):
+                self.cost = cost
+
+            def __enter__(self):
+                events.append(("enter", self.cost))
+
+            def __exit__(self, *exc):
+                events.append(("exit", self.cost))
+
         r, _ = make_sized({"big": 600})
+        r.call_scope = Scope
         orig = r.workers[0].executor.execute
 
         async def spy(*a, **k):
-            seen.append(router_mod.current_call_cost())
+            events.append(("call", None))
             return await orig(*a, **k)
 
         r.workers[0].executor.execute = spy
         await r.execute(None, "big", 8)
-        assert seen == [600]
-        assert router_mod.current_call_cost() is None  # reset after the call
+        assert events == [("enter", 600), ("call", None), ("exit", 600)]
     asyncio.run(go())
+
 
 
 def test_row_affinity_policy_is_sticky():

@@ -7,24 +7,17 @@ VLLMExecutor). For every call it asks the policy for the worker order, reserves
 the call's estimated KV bytes on the first worker with room, and waits if none
 has room. An idle worker always accepts, so an oversized call still progresses.
 """
-
 import asyncio
-import contextvars
-
-# Estimated KV bytes the router reserved for the call being made right now.
-# The executor reads it so the request record can log it. It lives here, with
-# no vllm imports, so the router stays unit-testable.
-_CALL_COST = contextvars.ContextVar("kalypso_call_cost", default=None)
-
-
-def current_call_cost():
-    return _CALL_COST.get()
+import contextlib
 
 
 class CallRouter:
-    def __init__(self, pool, policy, budget_fn):
+    def __init__(self, pool, policy, budget_fn, call_scope=None):
         self.policy = policy
         self.budget_fn = budget_fn  # (prompt, max_tokens) -> bytes
+        # Optional: call_scope(cost) returns a context manager that wraps each
+        # call, so the caller can tag it (server.py uses it to log est_cost).
+        self.call_scope = call_scope
         self.workers = list(pool.workers)
         self.capacity = {w.name: pool.manager(w).capacity() for w in self.workers}
         self.used = {w.name: 0 for w in self.workers}      # reserved bytes
@@ -57,14 +50,14 @@ class CallRouter:
             while w is None:
                 await self._cond.wait()
                 w = self._try_reserve(budget)
-        token = _CALL_COST.set(budget)
+        scope = self.call_scope(budget) if self.call_scope else contextlib.nullcontext()
         try:
-            return await getattr(w.executor, method)(
-                raw_request=raw_request, prompt=prompt, max_tokens=max_tokens,
-                pin=pin, priority=priority, **extra,
-            )
+            with scope:
+                return await getattr(w.executor, method)(
+                    raw_request=raw_request, prompt=prompt, max_tokens=max_tokens,
+                    pin=pin, priority=priority, **extra,
+                )
         finally:
-            _CALL_COST.reset(token)
             async with self._cond:
                 self.used[w.name] -= budget
                 self.inflight[w.name] -= 1

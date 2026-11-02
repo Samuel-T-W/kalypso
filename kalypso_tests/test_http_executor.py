@@ -143,6 +143,8 @@ def test_completion_and_chat_roundtrip_with_records():
         # same sampling settings as VLLMExecutor
         assert fw.posts[0]["temperature"] == 0.0 and fw.posts[0]["seed"] == 42
         assert all("vllm_xargs" not in post for post in fw.posts)
+        assert "chat_template_kwargs" not in fw.posts[0]
+        assert fw.posts[1]["chat_template_kwargs"] == {"enable_thinking": False}
         rows = rec.rows("request")
         assert len(rows) == 2
         a, b = rows

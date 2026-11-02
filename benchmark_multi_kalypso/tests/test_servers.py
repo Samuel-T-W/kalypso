@@ -20,7 +20,7 @@ def test_worker_and_coordinator_argv_and_scrubbed_environment(tmp_path, monkeypa
         "-m",
         "vllm.entrypoints.openai.api_server",
         "--model",
-        "Qwen/Qwen2.5-7B-Instruct",
+        "Qwen/Qwen3-8B",
         "--host",
         "127.0.0.1",
         "--port",

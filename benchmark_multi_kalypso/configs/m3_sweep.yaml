@@ -1,6 +1,6 @@
-model: Qwen/Qwen2.5-7B-Instruct
+model: Qwen/Qwen3-8B
 hardware:
-  gpu_type: A10
+  gpu_type: L40S
 n_workers: [2]
 policies: [round_robin, least_outstanding, cost_aware, row_affinity]
 workloads:

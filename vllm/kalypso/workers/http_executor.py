@@ -96,7 +96,7 @@ class HttpVLLMExecutor(LLMExecutor):
 
     # -- payloads (same sampling settings as VLLMExecutor) -------------------
     def _payload(self, key: str, prompt, max_tokens: int, priority: int):
-        return {
+        payload = {
             "model": self.model,
             key: prompt,
             "max_tokens": min(max_tokens, self.MAX_TOKENS_CAP),
@@ -108,6 +108,10 @@ class HttpVLLMExecutor(LLMExecutor):
             "priority": priority,
             "stream": False,
         }
+        if key == "messages":
+            # Qwen3 answers without a <think> block; templates without the flag ignore it.
+            payload["chat_template_kwargs"] = {"enable_thinking": False}
+        return payload
 
     # -- the one call path, with instrumentation -----------------------------
     async def _call(

@@ -83,7 +83,7 @@ The image copies the local working tree, including configured data roots, and in
 That install takes the compiled kernels from the pinned upstream wheel for base `2c0ee0fde8db447bd6e7d3ea0d49070661a243fa`.
 The image rebuilds whenever the working tree changes.
 Results record `git describe --dirty` from the launch machine.
-The entrypoint spawns one container per N concurrently, requesting `A10:<N>` from `hardware.gpu_type` and `n_workers` (`A10:2` for `m3_sweep.yaml`).
+The entrypoint spawns one container per N concurrently, requesting `A10:<N>` from `hardware.gpu_type` and `n_workers` (`L40S:2` for `m3_sweep.yaml`).
 Each container runs the same runner CLI used for a local host, so progress appears live in Modal logs.
 Outputs are written to volume `kalypso-runs` under `<timestamp>/n<N>/`, so they survive a disconnected laptop.
 When all containers finish, the entrypoint downloads them to `kalypso_modal_run/<timestamp>/` and writes the merged `results.csv` there.

@@ -15,10 +15,12 @@ def test_smoke_expands_to_one_twenty_row_run():
     ] == [(2, "round_robin", "fever", 20, 1)]
     assert config.model == "Qwen/Qwen2.5-0.5B-Instruct"
     assert config.timeouts.query_s == 3600
+    assert config.map_retry_max_tokens is None
 
 
 def test_m3_has_12_configurations_36_runs_in_requested_order():
     config = load_config(CONFIGS / "m3_sweep.yaml")
+    assert config.map_retry_max_tokens == 1024
     runs = expand(config)
     assert len(runs) == 36
     assert len({(r.n_workers, r.policy, r.workload.name) for r in runs}) == 12
@@ -52,6 +54,19 @@ def test_m3_has_12_configurations_36_runs_in_requested_order():
 def test_invalid_configs_rejected(before, after):
     with pytest.raises(ValueError):
         parse_config((CONFIGS / "smoke.yaml").read_text().replace(before, after))
+
+
+@pytest.mark.parametrize("value,expected", [("1024", 1024), ("1", 1), ("null", None)])
+def test_optional_map_retry_limit_parses(value, expected):
+    text = (CONFIGS / "smoke.yaml").read_text() + f"\nmap_retry_max_tokens: {value}\n"
+    assert parse_config(text).map_retry_max_tokens == expected
+
+
+@pytest.mark.parametrize("value", ["0", "-1", "true", "1.5", "'1024'", "[]"])
+def test_invalid_map_retry_limit_rejected(value):
+    text = (CONFIGS / "smoke.yaml").read_text() + f"\nmap_retry_max_tokens: {value}\n"
+    with pytest.raises(ValueError, match="map_retry_max_tokens"):
+        parse_config(text)
 
 
 def test_extra_worker_arguments_are_passed_through_without_reserved_arg_guards():

@@ -52,10 +52,12 @@ def test_worker_and_coordinator_argv_and_scrubbed_environment(tmp_path, monkeypa
     ]
     monkeypatch.setenv("KALYPSO_COIN_FLIP_SEED", "123")
     monkeypatch.setenv("KALYPSO_SKIP_INFERENCE", "1")
+    monkeypatch.setenv("KALYPSO_MAP_RETRY_MAX_TOKENS", "999")
     for gpu in (None, "2"):
         env = servers.child_env(ROOT, gpu)
         assert "KALYPSO_COIN_FLIP_SEED" not in env
         assert "KALYPSO_SKIP_INFERENCE" not in env
+        assert "KALYPSO_MAP_RETRY_MAX_TOKENS" not in env
         assert env["PYTHONPATH"].startswith(str(ROOT))
         if gpu is not None:
             assert env["CUDA_VISIBLE_DEVICES"] == "2"
@@ -143,3 +145,21 @@ def test_coordinator_uses_shared_port_layout(tmp_path, monkeypatch):
     assert start.call_args.args[-1] == 9000
     assert start.call_args.args[0][5:7] == ["--port", "9000"]
     ready.assert_called_once_with(server, "/v1/semantic/healthz", 120)
+
+
+@pytest.mark.parametrize("limit", [1024, None])
+def test_coordinator_environment_uses_only_configured_map_retry_limit(
+    tmp_path, monkeypatch, limit,
+):
+    monkeypatch.setenv("KALYPSO_MAP_RETRY_MAX_TOKENS", "999")
+    start = Mock()
+    monkeypatch.setattr(servers, "start", start)
+    monkeypatch.setattr(servers, "wait_ready", Mock())
+    config = load_config(ROOT / "benchmark_multi_kalypso/configs/smoke.yaml")
+    config = replace(config, map_retry_max_tokens=limit)
+    servers.start_coordinator(config, "round_robin", [], tmp_path, ROOT)
+    env = start.call_args.args[1]
+    if limit is None:
+        assert "KALYPSO_MAP_RETRY_MAX_TOKENS" not in env
+    else:
+        assert env["KALYPSO_MAP_RETRY_MAX_TOKENS"] == "1024"

@@ -97,6 +97,7 @@ Each container has a 24-hour timeout; unusually slow groups may require a smalle
 - `vllm.max_model_len`, `gpu_memory_utilization`, `extra_args`: worker settings and additional worker CLI arguments.
 - `timeouts.worker_ready_s`, `coordinator_ready_s`, `query_s`: default to 1800, 120 and 3600 seconds.
 - `reset_prefix_cache`: defaults true and calls every worker's `/reset_prefix_cache` outside the timer; workers always get `VLLM_SERVER_DEV_MODE=1`.
+- `map_retry_max_tokens`: optional positive integer setting `KALYPSO_MAP_RETRY_MAX_TOKENS` for the coordinator's SemMap retries; null or omitted keeps Kalypso's 8192 default, and M3 uses 1024 without changing first attempts.
 - `instrumentation.record_requests`: passes `--record-path`, so each run folder keeps `requests.jsonl`.
 - `instrumentation.poll_interval`: passes coordinator `--poll-interval`; null keeps its default.
 - `instrumentation.kv_cache_metrics_sample`: null omits worker KV flags; otherwise enables `--kv-cache-metrics` and sets the sample fraction after checking CLI support.

@@ -1,0 +1,19 @@
+model: Qwen/Qwen3-8B
+hardware: {gpu_type: A10}
+n_workers: [1]
+policies: [cost_aware]
+workloads:
+  - {name: fever, rows: 10}
+reps: 1
+reset_prefix_cache: true
+# Qwen3-8B leaves about 30k KV tokens on a 24 GB A10, below the default 32768.
+vllm: {max_model_len: 16384, gpu_memory_utilization: 0.95, extra_args: []}
+instrumentation:
+  record_requests: true
+  poll_interval: null
+  kv_cache_metrics_sample: null
+timeouts:
+  worker_ready_s: 1800
+  coordinator_ready_s: 120
+  query_s: 1800
+map_retry_max_tokens: 1024

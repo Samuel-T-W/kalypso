@@ -49,6 +49,7 @@ class Experiment:
     vllm: Vllm = field(default_factory=Vllm)
     instrumentation: Instrumentation = field(default_factory=Instrumentation)
     timeouts: Timeouts = field(default_factory=Timeouts)
+    map_retry_max_tokens: int | None = None
 
 
 @dataclass(frozen=True)
@@ -79,6 +80,10 @@ def parse_config(text: str) -> Experiment:
     config = Experiment(**values)
     if not config.model or type(config.reps) is not int or config.reps < 1:
         raise ValueError("model and positive integer reps are required")
+    if config.map_retry_max_tokens is not None and (
+        type(config.map_retry_max_tokens) is not int or config.map_retry_max_tokens < 1
+    ):
+        raise ValueError("map_retry_max_tokens must be a positive integer or null")
     if not config.n_workers or any(
         type(n) is not int or n < 1 for n in config.n_workers
     ):

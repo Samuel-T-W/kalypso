@@ -9,6 +9,7 @@ workloads:
   - {name: contract_nli, rows: 200, data_root: benchmark_multi_kalypso/data/contract_nli}
 reps: 3
 reset_prefix_cache: true
+map_retry_max_tokens: 1024
 vllm:
   max_model_len: 32768
   gpu_memory_utilization: 0.95

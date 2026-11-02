@@ -26,7 +26,11 @@ class Server:
 
 def child_env(repo_root: Path, gpu: str | None = None) -> dict[str, str]:
     env = dict(os.environ)
-    for key in ("KALYPSO_COIN_FLIP_SEED", "KALYPSO_SKIP_INFERENCE"):
+    for key in (
+        "KALYPSO_COIN_FLIP_SEED",
+        "KALYPSO_SKIP_INFERENCE",
+        "KALYPSO_MAP_RETRY_MAX_TOKENS",
+    ):
         env.pop(key, None)
     env["PYTHONPATH"] = str(repo_root) + os.pathsep + env.get("PYTHONPATH", "")
     env["PYTHONUNBUFFERED"] = "1"
@@ -181,8 +185,11 @@ def start_coordinator(
 ) -> Server:
     port = COORDINATOR_PORT
     cmd = coordinator_command(config, policy, [w.url for w in workers], port, run_dir)
+    env = child_env(repo_root)
+    if config.map_retry_max_tokens is not None:
+        env["KALYPSO_MAP_RETRY_MAX_TOKENS"] = str(config.map_retry_max_tokens)
     server = start(
-        cmd, child_env(repo_root), repo_root, run_dir / "coordinator.log", port
+        cmd, env, repo_root, run_dir / "coordinator.log", port
     )
     try:
         wait_ready(server, "/v1/semantic/healthz", config.timeouts.coordinator_ready_s)

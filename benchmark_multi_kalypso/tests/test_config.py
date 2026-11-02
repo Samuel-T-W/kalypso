@@ -16,6 +16,8 @@ def test_smoke_expands_to_one_twenty_row_run():
     assert config.model == "Qwen/Qwen2.5-0.5B-Instruct"
     assert config.timeouts.query_s == 3600
     assert config.map_retry_max_tokens is None
+    assert config.frequency_penalty is None
+    assert config.repetition_penalty is None
 
 
 def test_m3_has_12_configurations_36_runs_in_requested_order():
@@ -30,14 +32,15 @@ def test_m3_has_12_configurations_36_runs_in_requested_order():
         "round_robin/fever/rep_3",
         "round_robin/medec/rep_1",
     ]
-    assert [r.n_workers for r in runs] == [2] * 36
+    assert [r.n_workers for r in runs] == [4] * 36
+    assert (config.frequency_penalty, config.repetition_penalty) == (0.0, 1.0)
     assert [runs[i].policy for i in [0, 9, 18, 27]] == [
         "round_robin",
         "least_outstanding",
         "cost_aware",
         "row_affinity",
     ]
-    assert len(expand(config, 2)) == 36
+    assert len(expand(config, 4)) == 36
     with pytest.raises(ValueError, match="not in configured"):
         expand(config, 3)
 
@@ -66,6 +69,48 @@ def test_optional_map_retry_limit_parses(value, expected):
 def test_invalid_map_retry_limit_rejected(value):
     text = (CONFIGS / "smoke.yaml").read_text() + f"\nmap_retry_max_tokens: {value}\n"
     with pytest.raises(ValueError, match="map_retry_max_tokens"):
+        parse_config(text)
+
+
+@pytest.mark.parametrize(
+    "field,value,expected",
+    [
+        ("frequency_penalty", "0", 0.0),
+        ("frequency_penalty", "-2", -2.0),
+        ("frequency_penalty", "2", 2.0),
+        ("frequency_penalty", "0.5", 0.5),
+        ("frequency_penalty", "null", None),
+        ("repetition_penalty", "1", 1.0),
+        ("repetition_penalty", "0.5", 0.5),
+        ("repetition_penalty", "1.3", 1.3),
+        ("repetition_penalty", "null", None),
+    ],
+)
+def test_optional_sampling_penalties_parse(field, value, expected):
+    text = (CONFIGS / "smoke.yaml").read_text() + f"\n{field}: {value}\n"
+    assert getattr(parse_config(text), field) == expected
+
+
+@pytest.mark.parametrize("field", ["frequency_penalty", "repetition_penalty"])
+@pytest.mark.parametrize("value", ["true", "false", "'1'", "[]", "{}", ".nan"])
+def test_invalid_sampling_penalty_types_rejected(field, value):
+    text = (CONFIGS / "smoke.yaml").read_text() + f"\n{field}: {value}\n"
+    with pytest.raises(ValueError, match=field):
+        parse_config(text)
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("frequency_penalty", "-2.01"),
+        ("frequency_penalty", "2.01"),
+        ("repetition_penalty", "0"),
+        ("repetition_penalty", "-0.1"),
+    ],
+)
+def test_sampling_penalty_bounds_rejected(field, value):
+    text = (CONFIGS / "smoke.yaml").read_text() + f"\n{field}: {value}\n"
+    with pytest.raises(ValueError, match=field):
         parse_config(text)
 
 

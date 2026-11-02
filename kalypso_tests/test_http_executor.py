@@ -119,7 +119,27 @@ def run(coro):
     return asyncio.run(coro)
 
 
-def test_completion_and_chat_roundtrip_with_records():
+@pytest.mark.parametrize(
+    "frequency,repetition,expected",
+    [
+        (None, None, (0.5, 1.3)),
+        ("0", "1.0", (0.0, 1.0)),
+        ("-0.5", None, (-0.5, 1.3)),
+        (None, "1.1", (0.5, 1.1)),
+    ],
+)
+def test_completion_and_chat_roundtrip_with_records(
+    monkeypatch, frequency, repetition, expected,
+):
+    for name, value in (
+        ("KALYPSO_FREQUENCY_PENALTY", frequency),
+        ("KALYPSO_REPETITION_PENALTY", repetition),
+    ):
+        if value is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, value)
+
     async def go():
         fw = FakeWorker()
         await fw.start()
@@ -140,8 +160,12 @@ def test_completion_and_chat_roundtrip_with_records():
             await fw.stop()
         assert (r1.text, r1.finish_reason) == ("yes", "stop")
         assert r2.text == "hello"
-        # same sampling settings as VLLMExecutor
+        # Defaults match VLLMExecutor; environment overrides apply to both APIs.
         assert fw.posts[0]["temperature"] == 0.0 and fw.posts[0]["seed"] == 42
+        for post in fw.posts:
+            assert (post["frequency_penalty"], post["repetition_penalty"]) == expected
+            assert type(post["frequency_penalty"]) is float
+            assert type(post["repetition_penalty"]) is float
         assert all("vllm_xargs" not in post for post in fw.posts)
         assert "chat_template_kwargs" not in fw.posts[0]
         assert fw.posts[1]["chat_template_kwargs"] == {"enable_thinking": False}

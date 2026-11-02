@@ -20,7 +20,7 @@ def test_worker_and_coordinator_argv_and_scrubbed_environment(tmp_path, monkeypa
         "-m",
         "vllm.entrypoints.openai.api_server",
         "--model",
-        "Qwen/Qwen3-8B",
+        "Qwen/Qwen2.5-7B-Instruct",
         "--host",
         "127.0.0.1",
         "--port",
@@ -53,11 +53,15 @@ def test_worker_and_coordinator_argv_and_scrubbed_environment(tmp_path, monkeypa
     monkeypatch.setenv("KALYPSO_COIN_FLIP_SEED", "123")
     monkeypatch.setenv("KALYPSO_SKIP_INFERENCE", "1")
     monkeypatch.setenv("KALYPSO_MAP_RETRY_MAX_TOKENS", "999")
+    monkeypatch.setenv("KALYPSO_FREQUENCY_PENALTY", "0.7")
+    monkeypatch.setenv("KALYPSO_REPETITION_PENALTY", "1.7")
     for gpu in (None, "2"):
         env = servers.child_env(ROOT, gpu)
         assert "KALYPSO_COIN_FLIP_SEED" not in env
         assert "KALYPSO_SKIP_INFERENCE" not in env
         assert "KALYPSO_MAP_RETRY_MAX_TOKENS" not in env
+        assert "KALYPSO_FREQUENCY_PENALTY" not in env
+        assert "KALYPSO_REPETITION_PENALTY" not in env
         assert env["PYTHONPATH"].startswith(str(ROOT))
         if gpu is not None:
             assert env["CUDA_VISIBLE_DEVICES"] == "2"
@@ -163,3 +167,27 @@ def test_coordinator_environment_uses_only_configured_map_retry_limit(
         assert "KALYPSO_MAP_RETRY_MAX_TOKENS" not in env
     else:
         assert env["KALYPSO_MAP_RETRY_MAX_TOKENS"] == "1024"
+
+
+@pytest.mark.parametrize("frequency", [0, None])
+@pytest.mark.parametrize("repetition", [1.0, None])
+def test_coordinator_environment_uses_only_configured_sampling_penalties(
+    tmp_path, monkeypatch, frequency, repetition,
+):
+    monkeypatch.setenv("KALYPSO_FREQUENCY_PENALTY", "0.7")
+    monkeypatch.setenv("KALYPSO_REPETITION_PENALTY", "1.7")
+    start = Mock()
+    monkeypatch.setattr(servers, "start", start)
+    monkeypatch.setattr(servers, "wait_ready", Mock())
+    config = load_config(ROOT / "benchmark_multi_kalypso/configs/smoke.yaml")
+    config = replace(config, frequency_penalty=frequency, repetition_penalty=repetition)
+    servers.start_coordinator(config, "round_robin", [], tmp_path, ROOT)
+    env = start.call_args.args[1]
+    if frequency is None:
+        assert "KALYPSO_FREQUENCY_PENALTY" not in env
+    else:
+        assert env["KALYPSO_FREQUENCY_PENALTY"] == "0"
+    if repetition is None:
+        assert "KALYPSO_REPETITION_PENALTY" not in env
+    else:
+        assert env["KALYPSO_REPETITION_PENALTY"] == "1.0"

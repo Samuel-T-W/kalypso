@@ -1,7 +1,7 @@
 # M3 multi-worker experiment sweep
 
 This package runs the same experiment on a local multi-GPU machine or through an optional thin Modal backend.
-The M3 design is 3 workloads x 4 policies at N=2 = 12 configurations, repeated 3 times = 36 timed runs.
+The M3 design is 3 workloads x 4 policies at N=4 = 12 configurations, repeated 3 times = 36 timed runs.
 Each N group starts workers once, resets their prefix caches before every run, and starts a fresh coordinator with its own logs and recorder.
 There is no warm-up.
 
@@ -85,7 +85,7 @@ The image copies the local working tree, including configured data roots, and in
 That install takes the compiled kernels from the pinned upstream wheel for base `2c0ee0fde8db447bd6e7d3ea0d49070661a243fa`.
 The image rebuilds whenever the working tree changes.
 Results record `git describe --dirty` from the launch machine.
-The entrypoint spawns one container per N concurrently, requesting `A10:<N>` from `hardware.gpu_type` and `n_workers` (`L40S:2` for `m3_sweep.yaml`).
+The entrypoint spawns one container per N concurrently, requesting `A10:<N>` from `hardware.gpu_type` and `n_workers` (`A10:4` for `m3_sweep.yaml`).
 Each container runs the same runner CLI used for a local host, so progress appears live in Modal logs.
 Outputs are written to volume `kalypso-runs` under `<timestamp>/n<N>/`, so they survive a disconnected laptop.
 When all containers finish, the entrypoint downloads them to `kalypso_modal_run/<timestamp>/` and writes the merged `results.csv` there.
@@ -100,6 +100,7 @@ Each container has a 24-hour timeout; unusually slow groups may require a smalle
 - `timeouts.worker_ready_s`, `coordinator_ready_s`, `query_s`: default to 1800, 120 and 3600 seconds.
 - `reset_prefix_cache`: defaults true and calls every worker's `/reset_prefix_cache` outside the timer; workers always get `VLLM_SERVER_DEV_MODE=1`.
 - `map_retry_max_tokens`: optional positive integer setting `KALYPSO_MAP_RETRY_MAX_TOKENS` for the coordinator's SemMap retries; null or omitted keeps Kalypso's 8192 default, and M3 uses 1024 without changing first attempts.
+- `frequency_penalty`, `repetition_penalty`: optional numbers in [-2, 2] and > 0, respectively, setting `KALYPSO_FREQUENCY_PENALTY` and `KALYPSO_REPETITION_PENALTY` for the coordinator; null or omitted keeps Kalypso's defaults (0.5, 1.3), and 0.0, 1.0 disables both.
 - `instrumentation.record_requests`: passes `--record-path`, so each run folder keeps `requests.jsonl`.
 - `instrumentation.poll_interval`: passes coordinator `--poll-interval`; null keeps its default.
 - `instrumentation.kv_cache_metrics_sample`: null omits worker KV flags; otherwise enables `--kv-cache-metrics` and sets the sample fraction after checking CLI support.

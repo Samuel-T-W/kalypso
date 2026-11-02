@@ -16,8 +16,8 @@ def test_jobs_are_one_group_per_n_with_gpu_count():
         load_config(ROOT / "benchmark_multi_kalypso/configs/m3_sweep.yaml"),
         n_workers=[2, 3, 4],
     )
-    assert jobs(config) == [(2, "L40S:2"), (3, "L40S:3"), (4, "L40S:4")]
-    assert jobs(config, 3) == [(3, "L40S:3")]
+    assert jobs(config) == [(2, "A10:2"), (3, "A10:3"), (4, "A10:4")]
+    assert jobs(config, 3) == [(3, "A10:3")]
     with pytest.raises(ValueError, match="not in configured"):
         jobs(config, 7)
 

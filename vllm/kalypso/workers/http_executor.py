@@ -13,6 +13,7 @@ Pinning and abort are not supported.
 
 import asyncio
 import json
+import os
 import time
 
 from vllm.kalypso.execution.determinism import Determinism, apply_determinism
@@ -94,7 +95,7 @@ class HttpVLLMExecutor(LLMExecutor):
                 f"prompt={excerpt!r}"
             ) from exc
 
-    # -- payloads (same sampling settings as VLLMExecutor) -------------------
+    # -- payloads (default sampling settings match VLLMExecutor) ------------
     def _payload(self, key: str, prompt, max_tokens: int, priority: int):
         payload = {
             "model": self.model,
@@ -103,8 +104,12 @@ class HttpVLLMExecutor(LLMExecutor):
             "temperature": 0.0,
             "seed": 42,
             "top_p": 1.0,
-            "frequency_penalty": 0.5,
-            "repetition_penalty": 1.3,
+            "frequency_penalty": float(
+                os.environ.get("KALYPSO_FREQUENCY_PENALTY", "0.5")
+            ),
+            "repetition_penalty": float(
+                os.environ.get("KALYPSO_REPETITION_PENALTY", "1.3")
+            ),
             "priority": priority,
             "stream": False,
         }

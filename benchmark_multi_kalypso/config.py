@@ -50,6 +50,8 @@ class Experiment:
     instrumentation: Instrumentation = field(default_factory=Instrumentation)
     timeouts: Timeouts = field(default_factory=Timeouts)
     map_retry_max_tokens: int | None = None
+    frequency_penalty: float | None = None
+    repetition_penalty: float | None = None
 
 
 @dataclass(frozen=True)
@@ -84,6 +86,16 @@ def parse_config(text: str) -> Experiment:
         type(config.map_retry_max_tokens) is not int or config.map_retry_max_tokens < 1
     ):
         raise ValueError("map_retry_max_tokens must be a positive integer or null")
+    if config.frequency_penalty is not None and (
+        type(config.frequency_penalty) not in (int, float)
+        or not -2 <= config.frequency_penalty <= 2
+    ):
+        raise ValueError("frequency_penalty must be a number in [-2, 2] or null")
+    if config.repetition_penalty is not None and (
+        type(config.repetition_penalty) not in (int, float)
+        or not config.repetition_penalty > 0
+    ):
+        raise ValueError("repetition_penalty must be a positive number or null")
     if not config.n_workers or any(
         type(n) is not int or n < 1 for n in config.n_workers
     ):

@@ -30,6 +30,8 @@ def child_env(repo_root: Path, gpu: str | None = None) -> dict[str, str]:
         "KALYPSO_COIN_FLIP_SEED",
         "KALYPSO_SKIP_INFERENCE",
         "KALYPSO_MAP_RETRY_MAX_TOKENS",
+        "KALYPSO_FREQUENCY_PENALTY",
+        "KALYPSO_REPETITION_PENALTY",
     ):
         env.pop(key, None)
     env["PYTHONPATH"] = str(repo_root) + os.pathsep + env.get("PYTHONPATH", "")
@@ -188,6 +190,10 @@ def start_coordinator(
     env = child_env(repo_root)
     if config.map_retry_max_tokens is not None:
         env["KALYPSO_MAP_RETRY_MAX_TOKENS"] = str(config.map_retry_max_tokens)
+    if config.frequency_penalty is not None:
+        env["KALYPSO_FREQUENCY_PENALTY"] = str(config.frequency_penalty)
+    if config.repetition_penalty is not None:
+        env["KALYPSO_REPETITION_PENALTY"] = str(config.repetition_penalty)
     server = start(
         cmd, env, repo_root, run_dir / "coordinator.log", port
     )

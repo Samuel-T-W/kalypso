@@ -7,6 +7,7 @@ Interface the rest of the code relies on (a real WorkerPool should match it):
     pool.manager(w)      that worker's KVMemoryManager
     pool.managers()      all managers, in worker order
     pool.outstanding(w)  admitted, unfinished tasks on worker w
+    pool.cost(w)         reserved KV bytes on worker w
     w.name, w.executor
 """
 
@@ -53,3 +54,6 @@ class StubPool:
 
     def outstanding(self, w):
         return w.manager.total_inflight()
+    
+    def cost(self, w):
+        return w.manager.total_used()

@@ -26,7 +26,12 @@ from fastapi import FastAPI, Request
 
 from vllm.kalypso import interface
 from vllm.kalypso import query as query_mod
-from vllm.kalypso.instrumentation import RequestRecorder, WorkerMetricsPoller
+from vllm.kalypso.instrumentation import (
+    RequestRecorder,
+    WorkerMetricsPoller,
+    current_request_meta,
+    request_meta,
+)
 from vllm.kalypso.query_processor import QueryProcessor
 from vllm.kalypso.results import format_results
 from vllm.kalypso.workers.http_executor import HttpVLLMExecutor
@@ -102,10 +107,13 @@ def build_app(args) -> FastAPI:
         total_budget = pool.total_capacity()
         def budget_fn(prompt, max_tokens):
             manager = KVMemoryManager.get_instance()
+            max_tokens = min(max_tokens, HttpVLLMExecutor.MAX_TOKENS_CAP)
             return (manager.token_length(prompt) + max_tokens) * manager.bytes_per_token
 
         router = CallRouter(
             pool, RoundRobinPolicy() if policy.sticky else policy, budget_fn,
+            # request_meta() replaces the dict, so merge in the current fields.
+            call_scope=lambda cost: request_meta(**current_request_meta(), est_cost=cost),
         )
         if policy.sticky:
             # row_affinity: admit() places each row once; its later calls stay there.

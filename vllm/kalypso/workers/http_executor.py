@@ -155,6 +155,7 @@ class HttpVLLMExecutor(LLMExecutor):
                     stage=meta.get("stage"),
                     position=meta.get("position"),
                     row_idx=meta.get("row_idx"),
+                    est_cost=meta.get("est_cost"),  # reserved KV bytes; None unless routed by CallRouter
                     kind=kind,
                     pin=pin,
                     priority=priority,

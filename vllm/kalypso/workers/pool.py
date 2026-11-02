@@ -70,6 +70,9 @@ class WorkerPool:
 
     def outstanding(self, w):
         return w.manager.total_inflight()
+    
+    def cost(self, w):
+        return w.manager.total_used()
 
     def total_capacity(self):
        return sum(m.capacity() for m in self.managers())

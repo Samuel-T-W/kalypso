@@ -7,14 +7,17 @@ VLLMExecutor). For every call it asks the policy for the worker order, reserves
 the call's estimated KV bytes on the first worker with room, and waits if none
 has room. An idle worker always accepts, so an oversized call still progresses.
 """
-
 import asyncio
+import contextlib
 
 
 class CallRouter:
-    def __init__(self, pool, policy, budget_fn):
+    def __init__(self, pool, policy, budget_fn, call_scope=None):
         self.policy = policy
         self.budget_fn = budget_fn  # (prompt, max_tokens) -> bytes
+        # Optional: call_scope(cost) returns a context manager that wraps each
+        # call, so the caller can tag it (server.py uses it to log est_cost).
+        self.call_scope = call_scope
         self.workers = list(pool.workers)
         self.capacity = {w.name: pool.manager(w).capacity() for w in self.workers}
         self.used = {w.name: 0 for w in self.workers}      # reserved bytes
@@ -25,6 +28,9 @@ class CallRouter:
     # The policy sees the router as its "pool".
     def outstanding(self, w):
         return self.inflight[w.name]
+    
+    def cost(self, w):
+        return self.used[w.name]  # reserved bytes, which is what cost_aware ranks by
 
     def _try_reserve(self, budget):
         for w in self.policy.rank(self, None):
@@ -44,11 +50,13 @@ class CallRouter:
             while w is None:
                 await self._cond.wait()
                 w = self._try_reserve(budget)
+        scope = self.call_scope(budget) if self.call_scope else contextlib.nullcontext()
         try:
-            return await getattr(w.executor, method)(
-                raw_request=raw_request, prompt=prompt, max_tokens=max_tokens,
-                pin=pin, priority=priority, **extra,
-            )
+            with scope:
+                return await getattr(w.executor, method)(
+                    raw_request=raw_request, prompt=prompt, max_tokens=max_tokens,
+                    pin=pin, priority=priority, **extra,
+                )
         finally:
             async with self._cond:
                 self.used[w.name] -= budget

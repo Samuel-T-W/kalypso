@@ -30,12 +30,16 @@ policy = _load("kalypso_policy_for_pool", "policy.py")
 
 
 class FakeManager:
-    def __init__(self, inflight=0, capacity=100):
+    def __init__(self, inflight=0, capacity=100, used=0):
         self.inflight = inflight
         self._cap = capacity
+        self.used = used
 
     def total_inflight(self):
         return self.inflight
+
+    def total_used(self):
+        return self.used
 
     def capacity(self):
         return self._cap
@@ -48,12 +52,13 @@ def run(coro):
 # ---------------------------------------------------------------- construction
 
 def test_interface():
-    ms = [FakeManager(3, 100), FakeManager(1, 300)]
+    ms = [FakeManager(3, 100, 40), FakeManager(1, 300, 7)]
     p = pool.WorkerPool([pool.Worker(f"w{i}", "exec", m) for i, m in enumerate(ms)])
     w0, w1 = p.workers
     assert p.manager(w1) is ms[1]
     assert p.managers() == ms
     assert p.outstanding(w0) == 3
+    assert p.cost(w0) == 40 and p.cost(w1) == 7
     assert p.total_capacity() == 400
 
 
@@ -257,3 +262,11 @@ def test_least_outstanding_skips_full_worker():
     stage = FakeStage(full=[ms[0]])  # least-loaded worker has no room
     assert run(policy.admit(stage, t, p, policy.LeastOutstandingPolicy())) == 100
     assert t.ctx.state.worker.name == "w2" and t.ctx.state.executor == "e2"
+
+def test_cost_aware_over_worker_pool():
+    # w0 has the fewest calls but the most reserved bytes, so cost_aware must skip it.
+    ms = [FakeManager(0, used=900), FakeManager(5, used=100), FakeManager(2, used=400)]
+    p = pool.WorkerPool([pool.Worker(f"w{i}", f"e{i}", m) for i, m in enumerate(ms)])
+    t = make_task()
+    assert run(policy.admit(FakeStage(), t, p, policy.CostAwarePolicy())) == 100
+    assert t.ctx.state.worker.name == "w1" and t.ctx.state.executor == "e1"

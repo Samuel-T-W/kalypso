@@ -26,7 +26,12 @@ from fastapi import FastAPI, Request
 
 from vllm.kalypso import interface
 from vllm.kalypso import query as query_mod
-from vllm.kalypso.instrumentation import RequestRecorder, WorkerMetricsPoller
+from vllm.kalypso.instrumentation import (
+    RequestRecorder,
+    WorkerMetricsPoller,
+    current_request_meta,
+    request_meta,
+)
 from vllm.kalypso.query_processor import QueryProcessor
 from vllm.kalypso.results import format_results
 from vllm.kalypso.workers.http_executor import HttpVLLMExecutor
@@ -110,8 +115,11 @@ def build_app(args) -> FastAPI:
             router = CallRouter(
                 pool, policy,
                 lambda prompt, max_tokens: (
-                    KVMemoryManager.get_instance().token_length(prompt) + max_tokens
+                    KVMemoryManager.get_instance().token_length(prompt)
+                    + min(max_tokens, HttpVLLMExecutor.MAX_TOKENS_CAP)
                 ) * KVMemoryManager.get_instance().bytes_per_token,
+                # request_meta() replaces the dict, so merge in the current fields.
+                call_scope=lambda cost: request_meta(**current_request_meta(), est_cost=cost),
             )
             qp_pool, qp_policy, executor = None, None, router
 

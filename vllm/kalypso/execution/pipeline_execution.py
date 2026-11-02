@@ -12,7 +12,9 @@ from vllm.kalypso.workers.policy import admit, RoundRobinPolicy
 
 class PlanExecutor:
 
-    def __init__(self, pool=None, policy=None):
+    def __init__(self, pool=None, policy=None, executor=None):
+        self.pool = pool
+        self.executor = executor
         self.pipeline_executor = AsyncPipelineExecutor(pool=pool, policy=policy)
         self.blocking_executor = BlockingExecutor()
 
@@ -23,6 +25,12 @@ class PlanExecutor:
 
             # BLOCKING
             if isinstance(item, ops.BaseOp) and item.behavior == OpBehavior.BLOCKING:
+                if self.pool is not None:
+                    for ctx in ctxs:
+                        # Live pins still belong to the row's assigned worker.
+                        if ctx.state.pin_req_id is None:
+                            ctx.state.executor = self.executor
+                            ctx.state.worker = None
                 operator_name = item.__class__.__name__
                 input_count = len(ctxs)
                 started_at = time.perf_counter()

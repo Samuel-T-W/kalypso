@@ -23,7 +23,7 @@ class SemanticPlan:
         self.executor = executor
         self.pool = pool
         self.policy = policy
-        self.plan_executor = PlanExecutor(pool=pool, policy=policy)
+        self.plan_executor = PlanExecutor(pool=pool, policy=policy, executor=executor)
         self.virtual_pinning = virtual_pinning
         self.blocking = blocking
 

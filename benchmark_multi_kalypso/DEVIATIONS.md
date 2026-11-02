@@ -24,6 +24,7 @@ Each entry says why it exists and what cleanup looks like.
 | `KALYPSO_FREQUENCY_PENALTY` / `KALYPSO_REPETITION_PENALTY` env vars (defaults 0.5, 1.3) | `workers/http_executor.py` | Lets the sweep turn the penalties off without changing the defaults | Remove if the sweep returns to the paper's penalties |
 | row_affinity default executor is a round-robin `CallRouter` | `server.py` | Rows never placed by `admit()` all went to `workers[0]` | Keep; review with Rukmini |
 | Blocking operators drop unpinned rows' placed worker and use that router | `execution/pipeline_execution.py`, `controller/plan.py` | SemAgg followed the first row's worker; its summaries have no cache locality | Keep; review with Rukmini |
+| `CartesianProduct` copies the left row's `idx` onto joined rows | `sem_ops/joins.py` | Joined rows defaulted to `idx=-1`, so ContractNLI calls after the join were logged without their contract | Keep; consider upstreaming |
 | `cost_aware` merged from unmerged PR #9 (`rukmini/cost-aware`) | merge commit on `samuel/experiment-sweep` | Needed in the sweep before #9 lands | Rebase onto `main` after #9 merges; drop the merge commit |
 
 ## Known issues left as is

@@ -5,6 +5,8 @@ The M3 design is 3 workloads x 4 policies at N=2 = 12 configurations, repeated 3
 Each N group starts workers once, resets their prefix caches before every run, and starts a fresh coordinator with its own logs and recorder.
 There is no warm-up.
 
+Temporary changes and departures from the paper are tracked in [DEVIATIONS.md](DEVIATIONS.md).
+
 ## Layout
 
 - `plans.py`, `data/`: FEVER 500 claims, MEDEC 300 notes, ContractNLI 200 contracts joined with 17 hypotheses.

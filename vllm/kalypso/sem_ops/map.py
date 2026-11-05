@@ -26,7 +26,7 @@ from vllm.kalypso.execution.pipeline_execution import BlockingExecutor
 
 class SemMap(BaseOp):
     determinism = Text()
-    MAX_TOKEN_LIMIT = 8192
+    MAX_TOKEN_LIMIT = int(os.environ.get("KALYPSO_MAP_RETRY_MAX_TOKENS", "8192"))
     LOG = False
     LOG_RETRY_TRACE = True
     def __init__(

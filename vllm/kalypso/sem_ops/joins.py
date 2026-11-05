@@ -45,6 +45,7 @@ class CartesianProduct(BaseOp):
                     raw_request=ctx.state.raw_request,
                     pin_req_id=None,
                     executor=ctx.state.executor,
+                    idx=ctx.state.idx,
                     worker=ctx.state.worker,
 
                 ),

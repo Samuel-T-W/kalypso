@@ -1,0 +1,131 @@
+from pathlib import Path
+
+import pytest
+
+from benchmark_multi_kalypso.config import expand, load_config, parse_config
+
+CONFIGS = Path(__file__).resolve().parents[1] / "configs"
+
+
+def test_smoke_expands_to_one_twenty_row_run():
+    config = load_config(CONFIGS / "smoke.yaml")
+    assert [
+        (r.n_workers, r.policy, r.workload.name, r.workload.rows, r.rep)
+        for r in expand(config)
+    ] == [(2, "round_robin", "fever", 20, 1)]
+    assert config.model == "Qwen/Qwen2.5-0.5B-Instruct"
+    assert config.timeouts.query_s == 3600
+    assert config.map_retry_max_tokens is None
+    assert config.frequency_penalty is None
+    assert config.repetition_penalty is None
+
+
+def test_m3_has_12_configurations_36_runs_in_requested_order():
+    config = load_config(CONFIGS / "m3_sweep.yaml")
+    assert config.map_retry_max_tokens == 1024
+    runs = expand(config)
+    assert len(runs) == 36
+    assert len({(r.n_workers, r.policy, r.workload.name) for r in runs}) == 12
+    assert [r.name for r in runs[:4]] == [
+        "round_robin/fever/rep_1",
+        "round_robin/fever/rep_2",
+        "round_robin/fever/rep_3",
+        "round_robin/medec/rep_1",
+    ]
+    assert [r.n_workers for r in runs] == [4] * 36
+    assert (config.frequency_penalty, config.repetition_penalty) == (0.0, 1.0)
+    assert [runs[i].policy for i in [0, 9, 18, 27]] == [
+        "round_robin",
+        "least_outstanding",
+        "cost_aware",
+        "row_affinity",
+    ]
+    assert len(expand(config, 4)) == 36
+    with pytest.raises(ValueError, match="not in configured"):
+        expand(config, 3)
+
+
+@pytest.mark.parametrize(
+    "before,after",
+    [
+        ("reps: 1", "reps: 0"),
+        ("n_workers: [2]", "n_workers: [2, 2]"),
+        ("rows: 20", "rows: 0"),
+        ("poll_interval: null", "poll_interval: -1"),
+    ],
+)
+def test_invalid_configs_rejected(before, after):
+    with pytest.raises(ValueError):
+        parse_config((CONFIGS / "smoke.yaml").read_text().replace(before, after))
+
+
+@pytest.mark.parametrize("value,expected", [("1024", 1024), ("1", 1), ("null", None)])
+def test_optional_map_retry_limit_parses(value, expected):
+    text = (CONFIGS / "smoke.yaml").read_text() + f"\nmap_retry_max_tokens: {value}\n"
+    assert parse_config(text).map_retry_max_tokens == expected
+
+
+@pytest.mark.parametrize("value", ["0", "-1", "true", "1.5", "'1024'", "[]"])
+def test_invalid_map_retry_limit_rejected(value):
+    text = (CONFIGS / "smoke.yaml").read_text() + f"\nmap_retry_max_tokens: {value}\n"
+    with pytest.raises(ValueError, match="map_retry_max_tokens"):
+        parse_config(text)
+
+
+@pytest.mark.parametrize(
+    "field,value,expected",
+    [
+        ("frequency_penalty", "0", 0.0),
+        ("frequency_penalty", "-2", -2.0),
+        ("frequency_penalty", "2", 2.0),
+        ("frequency_penalty", "0.5", 0.5),
+        ("frequency_penalty", "null", None),
+        ("repetition_penalty", "1", 1.0),
+        ("repetition_penalty", "0.5", 0.5),
+        ("repetition_penalty", "1.3", 1.3),
+        ("repetition_penalty", "null", None),
+    ],
+)
+def test_optional_sampling_penalties_parse(field, value, expected):
+    text = (CONFIGS / "smoke.yaml").read_text() + f"\n{field}: {value}\n"
+    assert getattr(parse_config(text), field) == expected
+
+
+@pytest.mark.parametrize("field", ["frequency_penalty", "repetition_penalty"])
+@pytest.mark.parametrize("value", ["true", "false", "'1'", "[]", "{}", ".nan"])
+def test_invalid_sampling_penalty_types_rejected(field, value):
+    text = (CONFIGS / "smoke.yaml").read_text() + f"\n{field}: {value}\n"
+    with pytest.raises(ValueError, match=field):
+        parse_config(text)
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("frequency_penalty", "-2.01"),
+        ("frequency_penalty", "2.01"),
+        ("repetition_penalty", "0"),
+        ("repetition_penalty", "-0.1"),
+    ],
+)
+def test_sampling_penalty_bounds_rejected(field, value):
+    text = (CONFIGS / "smoke.yaml").read_text() + f"\n{field}: {value}\n"
+    with pytest.raises(ValueError, match=field):
+        parse_config(text)
+
+
+def test_extra_worker_arguments_are_passed_through_without_reserved_arg_guards():
+    text = (
+        (CONFIGS / "smoke.yaml")
+        .read_text()
+        .replace(
+            "extra_args: []",
+            "extra_args: [--port, '9000', --tensor-parallel-size, '1']",
+        )
+    )
+    assert parse_config(text).vllm.extra_args == [
+        "--port",
+        "9000",
+        "--tensor-parallel-size",
+        "1",
+    ]

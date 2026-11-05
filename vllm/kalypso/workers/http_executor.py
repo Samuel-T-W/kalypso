@@ -13,6 +13,7 @@ Pinning and abort are not supported.
 
 import asyncio
 import json
+import os
 import time
 
 from vllm.kalypso.execution.determinism import Determinism, apply_determinism
@@ -50,9 +51,10 @@ class HttpVLLMExecutor(LLMExecutor):
             import aiohttp
 
             # Bound call duration; KV admission already bounds concurrency.
+            # Drop idle connections before vLLM's 5s keep-alive closes them.
             self._session = aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(total=self.timeout_s),
-                connector=aiohttp.TCPConnector(limit=0),
+                connector=aiohttp.TCPConnector(limit=0, keepalive_timeout=4),
             )
         return self._session
 
@@ -62,17 +64,24 @@ class HttpVLLMExecutor(LLMExecutor):
             self._session = None
 
     async def _post(self, path: str, payload: dict) -> dict:
+        import aiohttp
+
         submit_t = time.monotonic()
         url = self.base_url + path
         try:
             session = await self._get_session()
-            async with session.post(url, json=payload) as resp:
-                body = await resp.text()
-                if resp.status >= 300:
-                    raise WorkerRequestError(
-                        f"{self.name} {path} -> HTTP {resp.status}: {body[:300]}"
-                    )
-                return json.loads(body)
+            for attempt in range(2):
+                try:
+                    async with session.post(url, json=payload) as resp:
+                        body = await resp.text()
+                        if resp.status >= 300:
+                            raise WorkerRequestError(
+                                f"{self.name} {path} -> HTTP {resp.status}: {body[:300]}"
+                            )
+                        return json.loads(body)
+                except aiohttp.ServerDisconnectedError:
+                    if attempt == 1:
+                        raise
         except WorkerRequestError:
             raise
         except asyncio.CancelledError:
@@ -86,20 +95,28 @@ class HttpVLLMExecutor(LLMExecutor):
                 f"prompt={excerpt!r}"
             ) from exc
 
-    # -- payloads (same sampling settings as VLLMExecutor) -------------------
+    # -- payloads (default sampling settings match VLLMExecutor) ------------
     def _payload(self, key: str, prompt, max_tokens: int, priority: int):
-        return {
+        payload = {
             "model": self.model,
             key: prompt,
             "max_tokens": min(max_tokens, self.MAX_TOKENS_CAP),
             "temperature": 0.0,
             "seed": 42,
             "top_p": 1.0,
-            "frequency_penalty": 0.5,
-            "repetition_penalty": 1.3,
+            "frequency_penalty": float(
+                os.environ.get("KALYPSO_FREQUENCY_PENALTY", "0.5")
+            ),
+            "repetition_penalty": float(
+                os.environ.get("KALYPSO_REPETITION_PENALTY", "1.3")
+            ),
             "priority": priority,
             "stream": False,
         }
+        if key == "messages":
+            # Qwen3 answers without a <think> block; templates without the flag ignore it.
+            payload["chat_template_kwargs"] = {"enable_thinking": False}
+        return payload
 
     # -- the one call path, with instrumentation -----------------------------
     async def _call(

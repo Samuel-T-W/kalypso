@@ -1,0 +1,5 @@
+LABEL_ID: nda-8
+SHORT_DESCRIPTION: Notice on compelled disclosure
+
+HYPOTHESIS:
+Receiving Party shall notify Disclosing Party in case Receiving Party is required by law, regulation or judicial process to disclose any Confidential Information.

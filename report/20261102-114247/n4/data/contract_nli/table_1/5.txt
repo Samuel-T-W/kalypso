@@ -1,0 +1,5 @@
+LABEL_ID: nda-5
+SHORT_DESCRIPTION: Sharing with employees
+
+HYPOTHESIS:
+Receiving Party may share some Confidential Information with some of Receiving Party's employees.

@@ -1,0 +1,26 @@
+{
+  "ops": [
+    {
+      "op": "sem_filter",
+      "args": {
+        "prompt": "Is this document a valid contract or agreement text with enough substantive clauses to evaluate confidentiality obligations?"
+      }
+    },
+    {
+      "op": "join",
+      "args": {
+        "instruction": "Given the contract and hypothesis, does the contract entail the hypothesis? Answer true only if the contract clearly supports the hypothesis.",
+        "right_table": "/__modal/volumes/vo-7hGjpVtYycANzICxhOqj3X/20261102-154922/n4/data/contract_nli/table_1"
+      }
+    },
+    {
+      "op": "sem_map",
+      "args": {
+        "prompt": "Explain briefly why the contract entails the hypothesis. Cite the relevant obligation or clause in one concise sentence. Do not add filler, repeated punctuation, or repeated characters."
+      }
+    }
+  ],
+  "data_path": "/__modal/volumes/vo-7hGjpVtYycANzICxhOqj3X/20261102-154922/n4/data/contract_nli/input",
+  "blocking": false,
+  "model_name": "Qwen/Qwen2.5-7B-Instruct"
+}

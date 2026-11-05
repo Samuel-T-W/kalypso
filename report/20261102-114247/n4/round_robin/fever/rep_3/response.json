@@ -1,0 +1,54 @@
+{
+  "request_id": "75116b5c45104da1b5b188b1b02f7ada",
+  "model_name": "Qwen/Qwen2.5-7B-Instruct",
+  "data_path": "/__modal/volumes/vo-7hGjpVtYycANzICxhOqj3X/20261102-114247/n4/data/fever/input/input.csv",
+  "ops": [
+    {
+      "op": "sem_filter",
+      "args": {
+        "prompt": "Is this claim about a specific person, place or work? Reply with only true or false."
+      }
+    },
+    {
+      "op": "sem_map",
+      "args": {
+        "prompt": "Answer SUPPORTED or REFUTED from general knowledge, with a one-sentence reason."
+      }
+    },
+    {
+      "op": "sem_agg",
+      "args": {
+        "instruction": "Summarize the most common reasons claims were refuted."
+      }
+    }
+  ],
+  "blocking": false,
+  "num_output_rows": 1,
+  "latency_sec": 19.132,
+  "results": [
+    {
+      "idx": -1,
+      "worker": null,
+      "input_context": [
+        {
+          "role": "user",
+          "type": "text",
+          "content": "CONTEXT:\n  {\n    \"text\": - Incorrect biographical information\n- Misattribution of roles or positions\n- Misrepresentation of historical facts\n- Misidentification of individuals or their professions\n- Lack of evidence for the claim\n- Misinterpretation of the claim's context\n  }\n"
+        }
+      ],
+      "right_input_context": [],
+      "outputs": [
+        {
+          "op": "<class 'vllm.kalypso.sem_ops.reducers.SemAgg'>",
+          "value": [
+            {
+              "role": "user",
+              "type": "text",
+              "content": "CONTEXT:\n  {\n    \"text\": - Incorrect biographical information\n- Misattribution of roles or positions\n- Misrepresentation of historical facts\n- Misidentification of individuals or their professions\n- Lack of evidence for the claim\n- Misinterpretation of the claim's context\n  }\n"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

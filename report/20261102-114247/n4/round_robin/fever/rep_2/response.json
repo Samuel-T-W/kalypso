@@ -1,0 +1,54 @@
+{
+  "request_id": "cca2e194d9084ca98d3fc9ef458b3a3e",
+  "model_name": "Qwen/Qwen2.5-7B-Instruct",
+  "data_path": "/__modal/volumes/vo-7hGjpVtYycANzICxhOqj3X/20261102-114247/n4/data/fever/input/input.csv",
+  "ops": [
+    {
+      "op": "sem_filter",
+      "args": {
+        "prompt": "Is this claim about a specific person, place or work? Reply with only true or false."
+      }
+    },
+    {
+      "op": "sem_map",
+      "args": {
+        "prompt": "Answer SUPPORTED or REFUTED from general knowledge, with a one-sentence reason."
+      }
+    },
+    {
+      "op": "sem_agg",
+      "args": {
+        "instruction": "Summarize the most common reasons claims were refuted."
+      }
+    }
+  ],
+  "blocking": false,
+  "num_output_rows": 1,
+  "latency_sec": 19.785,
+  "results": [
+    {
+      "idx": -1,
+      "worker": null,
+      "input_context": [
+        {
+          "role": "user",
+          "type": "text",
+          "content": "CONTEXT:\n  {\n    \"text\": - Incorrect factual information\n- Misattribution\n- Misrepresentation of historical facts\n- Mixing up historical figures or events\n- Inconsistent with known works or roles\n- Location errors\n- Incorrect dates\n- Non-existent or incorrect positions\n- Incorrect nationalities\n  }\n"
+        }
+      ],
+      "right_input_context": [],
+      "outputs": [
+        {
+          "op": "<class 'vllm.kalypso.sem_ops.reducers.SemAgg'>",
+          "value": [
+            {
+              "role": "user",
+              "type": "text",
+              "content": "CONTEXT:\n  {\n    \"text\": - Incorrect factual information\n- Misattribution\n- Misrepresentation of historical facts\n- Mixing up historical figures or events\n- Inconsistent with known works or roles\n- Location errors\n- Incorrect dates\n- Non-existent or incorrect positions\n- Incorrect nationalities\n  }\n"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+NON-DISCLOSURE AGREEMENT
+This document is provided in good faith but no warranty, expressed or implied, is given that the information is complete or accurate nor that it is fit for a particular purpose. WareWorks Ltd hereby excludes liability for any claims, losses, demands or damages or any kind whatsoever with respect to this service, including (without loss of generality) direct, indirect, incidental or consequential loss or damages, consequential damages or loss of profits.
+This agreement is entered into as of ??/??/???? by and between:
+(1) COMPANY A FULL NAME a company duly incorporated under the laws of England, with a registration number ???????? (“COMPANY A”); and
+(2) COMPANY B FULL NAME a company duly incorporated under the laws of England, with a registration number ???????? (“COMPANY B”).
+WHEREAS COMPANY A and COMPANY B intend to disclose to each other certain information for the development and marketing of communication, audio, security and other added value products (the “Purpose”); and
+WHEREAS it is vital to the commercial interests of COMPANY A and COMPANY B that both parties recognise the strictly secret and confidential nature, as well as ownership, of the Information (as defined herein) to which each party may have access or which may be disclosed pursuant to the Purpose.
+NOW THEREFORE, this agreement witnesseth that in consideration of the premises and agreements herein, the parties hereby agree as follows:
+1. In this agreement, “Information” shall mean the whole or any portion of any knowledge, data or information relating to the activities or business of each party which may be in tangible or intangible form, expressed orally, in writing or in any other form (whether or not marked confidential) including, but not limited to, financial information and data, business and financial plans, budgets, prices, marketing plans, market information, strategic information, information concerning customers, bookings and revenues, samples, trade secrets, technical information, drawings, sketches, data, techniques, studies, processes, systems, ideas, know-how, industry affiliations, photographs, computer programs, models, source codes, object codes, manuals, tape recordings and any documentation or other form of record.
+2. This agreement shall govern the terms under which one party discloses Information to the other party in relation to the Purpose, regardless of whether the disclosure takes place before or after the date of this agreement.
+3. The Information of each party is and shall remain that party’s sole, exclusive and valuable property. Nothing in this Agreement or in any disclosures of Information by either party shall be construed as granting or conferring to the other party any license, rights, title or any interest whatsoever in any such Information.
+4. Each party shall hold in trust and confidence and protect and treat as strictly secret and confidential at all times the Information received from the other party, and in respect of such Information, each party agrees that it:
+(a) shall not directly or indirectly disclose, verbally, in writing or in any other form, or allow the Information to be disclosed to any other person, firm or company;
+(b) shall keep secret and shall not use, manipulate or exploit the Information, except for the Purpose and then only in strict accordance with the Purpose and the terms of this Agreement;
+(c) shall restrict disclosure of the Information to such of its employees or consultants or subcontractors who need to know for the Purpose and shall procure that such persons observe fully the provisions of this Agreement as if they were themselves parties to it;
+(d) shall not copy, store or distribute any Information or allow any Information to be copied, stored or distributed except for such copies, storage or distribution as are strictly required for the Purpose;
+(e) shall protect the commercial interest of the disclosing party and shall take the same precautions to protect the Information as a careful and prudent person would be expected to employ for its own business and confidential information and, in doing so, shall use reasonable care to protect the Information from unauthorised use, harm, exploitation, manipulation, modification, interference, misuse, misappropriation, copy or disclosure whatsoever, except as specifically authorised by the disclosing party in writing;
+(f) shall keep all Information that is electronically stored in a tangible form segregated from all of its own property and in a safe and secure environment and protect and keep safe all such Information from any loss, harm, theft, unauthorised use, tampering, sabotage, unauthorised duplication, destruction, damage or interference whatsoever
+(g) shall, upon demand, inform the disclosing party of the location of the Information and the measures that it has taken to preserve its confidentiality;
+(h) shall return to the disclosing party all Information, copies and tangible manifestations thereof, in any form whatsoever, and delete all Information from all retrieval systems and databases or destroy the same immediately upon the direction of the disclosing party, and furnish to the disclosing party, immediately upon its request, a certificate of a senior officer or director attesting to such return, deletion or destruction, as the case may be;
+(i) shall treat communications with the other party as confidential and utilise reasonable care in maintaining the confidentiality of communications even if they do not include Information: and
+(j) shall be liable to the other party for compliance with the terms and conditions of this Agreement, and shall fully indemnify the other party and hold it harmless from damages (including lawyers’ fees and disbursements) incurred as a result of a breach of this Agreement.
+5. The obligations contained herein shall not apply to Information which:
+(a) at the time of disclosure, is within the public domain or which, after disclosure, becomes rightfully available to the public, other than by a breach of this Agreement;
+(b) was independently developed or acquired by the receiving party, other than by a breach of this Agreement;
+(c) was rightfully obtained by the receiving party from a third party without restrictions in respect to disclosure or use;
+(d) the receiving party is by law compelled to disclose, provided that the receiving party has forthwith notified the disclosing party of any such compelled disclosure when the receiving party first becomes aware of any such legal obligation to disclose: or
+(e) is explicitly approved for release by written authorisation of the disclosing party.
+6. The parties’ obligations hereunder shall:
+(a) be unlimited in territory;
+(b) only expire ten (10) years from the date of this Agreement or in the case of technical Information at the end of the commercial usefulness to the disclosing party; and
+(c) survive the termination of this Agreement for any reason whatsoever.
+7. The parties acknowledge that the obligations contained herein are entirely reasonable and necessary in order to protect the legitimate commercial, trade, business and technical interests of the disclosing party and the expiration of such obligations is without prejudice to any rights which the disclosing party may have in relation to the Information under applicable Intellectual Property law.
+8. The parties acknowledge that a violation by the receiving party of its obligations contained herein may cause serious harm to the disclosing party that damages may be insufficient to constitute an adequate remedy. The parties agree that they shall be entitled, in addition to all other rights provided by law or by this Agreement, including monetary damages, to obtain a permanent injunction or mandatory court order to prevent the violation of the obligations contained herein.
+9. The parties acknowledge that no representation or warranty has been made as to the accuracy or completeness of any Information which may be supplied and it is agreed that neither party shall have any liability, direct or indirect, to the other as a result of the use of the Information.
+10. The parties understand and agree that no contract or agreement with regard to the Purpose, nor any other undertaking or arrangement involving the parties, is deemed to have been made or entered into by reason of this Agreement.
+11. If another agreement exists between the parties, which relates in any way to Information, it shall be interpreted along with this Agreement so as to favour the protection of the secrecy, confidentiality and proprietary nature of the Information.
+12. Notices shall be deemed sufficiently given when delivered by hand, by fax or by registered mail to the following addresses
+If to COMPANY A at:
+Address Line 1
+Address Line 2
+Address Line 3
+Address Line 4
+And if to COMPANY B at:
+Address Line 1
+Address Line 2
+Address Line 3
+Address Line 4
+The addresses and persons for whose attention notices are to be sent may be changed at any time by notice given in accordance with this Section:
+13. The parties shall do all such things and provide all such further and other assurances as may be reasonably required in order to give effect to the purpose and intent of this Agreement.
+14. This Agreement shall inure to the benefit of and be binding upon the parties hereto and their respective successors and permitted assigns. Neither party shall assign, transfer or otherwise alienate its rights and obligations hereunder in whole or in part, without the prior written consent of the other party.
+15. The recitals shall form part of this Agreement as if repeated at length in this Agreement.
+16. This Agreement may be executed in one or more counterparts each of which when so executed shall be deemed to be an original and such counterparts together shall constitute but one of the same instrument.
+17. If any provision of this Agreement is or becomes void or unenforceable by force or by operation of law, the remaining provisions shall remain valid and enforceable.
+18. Any failure by either party to exercise any rights arising as a result of the obligations set out in this Agreement shall not act as a waiver of such rights, nor shall any partial exercise of any right preclude any further exercise of such rights.
+19. This Agreement shall be governed by and interpreted in accordance with the laws of England.
+20. Any amendments to this Agreement shall be binding on the parties only if made in writing and signed by duly authorised representative of each party.
+IN WITNESS WHEROF, the parties hereto have caused this Agreement to be signed in duplicate, and to be effective as of the date first written above.
+COMPANY A COMPANY B
+…………………………………….. ………………………………….
+Name: ………………… Name: ………………
+Position: ……………….. Position ………………
+Date: …………………. Date: ……………….

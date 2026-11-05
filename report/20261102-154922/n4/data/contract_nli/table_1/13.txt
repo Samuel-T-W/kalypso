@@ -1,0 +1,5 @@
+LABEL_ID: nda-13
+SHORT_DESCRIPTION: Permissible acquirement of similar information
+
+HYPOTHESIS:
+Receiving Party may acquire information similar to Confidential Information from a third party.

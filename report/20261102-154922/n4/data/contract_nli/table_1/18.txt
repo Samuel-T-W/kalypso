@@ -1,0 +1,5 @@
+LABEL_ID: nda-18
+SHORT_DESCRIPTION: No solicitation
+
+HYPOTHESIS:
+Receiving Party shall not solicit some of Disclosing Party's representatives.

@@ -1,0 +1,25 @@
+{
+  "ops": [
+    {
+      "op": "sem_filter",
+      "args": {
+        "prompt": "This is the MEDEC benchmark for medical error detection in clinical notes. The note may contain one subtle deliberately injected medical error in one numbered sentence, such as an incorrect diagnosis, pathogen, treatment, test, anatomy, epidemiology, or clinical fact. About half of the notes contain an error. Compare each numbered sentence against the rest of the case context and expected medical knowledge. Answer TRUE if any numbered sentence is medically inconsistent or likely erroneous. Answer FALSE only if all numbered sentences are medically consistent. Return only TRUE or FALSE."
+      }
+    },
+    {
+      "op": "sem_map",
+      "args": {
+        "prompt": "Identify the numbered sentence that contains the medical error. Return only the sentence ID as an integer, with no explanation."
+      }
+    },
+    {
+      "op": "sem_map",
+      "args": {
+        "prompt": "Generate the corrected version of the erroneous numbered sentence. Return only the corrected sentence, with no explanation."
+      }
+    }
+  ],
+  "data_path": "/__modal/volumes/vo-7hGjpVtYycANzICxhOqj3X/20261102-114247/n4/data/medec/input/input.csv",
+  "blocking": false,
+  "model_name": "Qwen/Qwen2.5-7B-Instruct"
+}

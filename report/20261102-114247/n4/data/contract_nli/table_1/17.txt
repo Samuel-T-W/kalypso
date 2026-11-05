@@ -1,0 +1,5 @@
+LABEL_ID: nda-17
+SHORT_DESCRIPTION: Permissible copy
+
+HYPOTHESIS:
+Receiving Party may create a copy of some Confidential Information in some circumstances.

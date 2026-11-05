@@ -1,0 +1,65 @@
+INFO:     Started server process [2502]
+INFO:     Waiting for application startup.
+[WorkerPool] http://127.0.0.1:8100 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8102 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8101 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8103 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[Coordinator] 4 workers, model=Qwen/Qwen2.5-7B-Instruct, policy=row_affinity, records=/__modal/volumes/vo-7hGjpVtYycANzICxhOqj3X/20261102-114247/n4/row_affinity/fever/rep_2/requests.jsonl
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:18696 - "GET /v1/semantic/healthz HTTP/1.1" 200 OK
+[1] PIPELINE
+  (1) STAGE stage_id=1 behavior=TUPLE_INDEPENDENT ops=['SemFilter', 'SemMap'] fanout=None
+[2] BLOCKING SemAgg
+[sched] 17:33:29 start task=100 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   0.0/5.7       1   499
+    1      w1   0.0/5.7       0   499
+    1      w2   0.0/5.7       0   499
+    1      w3   0.0/5.7       0   499
+[sched] 17:33:30 finish task=113 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   1.1/5.7     124     0
+    1      w1   1.1/5.7     123     0
+    1      w2   1.1/5.7     125     0
+    1      w3   1.1/5.7     124     0
+[sched] 17:33:31 finish task=325 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   0.8/5.7      89     0
+    1      w1   0.8/5.7      91     0
+    1      w2   0.9/5.7     103     0
+    1      w3   0.9/5.7      97     0
+[sched] 17:33:32 finish task=536 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   0.6/5.7      61     0
+    1      w1   0.6/5.7      61     0
+    1      w2   0.6/5.7      70     0
+    1      w3   0.6/5.7      72     0
+[sched] 17:33:33 finish task=132 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   0.4/5.7      46     0
+    1      w1   0.4/5.7      42     0
+    1      w2   0.6/5.7      67     0
+    1      w3   0.6/5.7      66     0
+[sched] 17:33:34 finish task=542 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   0.0/5.7       1     0
+    1      w1   0.0/5.7       0     0
+    1      w2   0.1/5.7      12     0
+    1      w3   0.1/5.7       8     0
+[sem-map] retry-trigger stage=1 position=1 request_id=chatcmpl-9855e1438e27eb6d pin_req_id=None from_max_tokens=69 to_max_tokens=1024 input_tokens=69
+[sched] 17:33:37 finish task=843 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   0.0/5.7       0     0
+    1      w1   0.0/5.7       0     0
+    1      w2   0.0/5.7       0     0
+    1      w3   0.0/5.7       0     0
+[blocking-operator] start operator=SemAgg position=2 input_tuples=248
+[blocking-operator] done operator=SemAgg position=2 input_tuples=248 output_tuples=1 elapsed_seconds=7.265
+len(out)1
+[QueryProcessor] QUERY_KV_STATS {"decode_time_seconds": 666.8929430338903, "decode_tokens": 8570, "elapsed_seconds": 15.816685531000076, "inference_time_seconds": 955.5021627022361, "kv_blocks_evicted": 0, "kv_eviction_metric_available": false, "llm_work_metrics_available": true, "preemptions": 0, "prefill_time_seconds": 288.6092196680729, "prefill_tokens_computed": 111481, "prefix_hit_fraction": 0.2680795467228667, "prefix_tokens_computed_on_miss": 111481, "prefix_tokens_queried": 152313, "prefix_tokens_reused": 40832, "prompt_tokens": 152313, "query_id": "query-df20dcb5ffa64507a9eec1798d516830", "scope": "process_delta"}
+INFO:     127.0.0.1:61379 - "POST /v1/semantic/query HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [2502]

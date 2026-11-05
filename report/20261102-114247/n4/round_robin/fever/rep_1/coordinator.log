@@ -1,0 +1,40 @@
+INFO:     Started server process [1378]
+INFO:     Waiting for application startup.
+[WorkerPool] http://127.0.0.1:8100 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8102 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8103 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8101 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[Coordinator] 4 workers, model=Qwen/Qwen2.5-7B-Instruct, policy=round_robin, records=/__modal/volumes/vo-7hGjpVtYycANzICxhOqj3X/20261102-114247/n4/round_robin/fever/rep_1/requests.jsonl
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:43825 - "GET /v1/semantic/healthz HTTP/1.1" 200 OK
+[1] PIPELINE
+  (1) STAGE stage_id=1 behavior=TUPLE_INDEPENDENT ops=['SemFilter', 'SemMap'] fanout=None
+[2] BLOCKING SemAgg
+[sched] 16:59:02 start task=100 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   0.0/22.6      1   499
+[sched] 16:59:04 finish task=101 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   4.5/22.6    499     0
+[sched] 16:59:06 finish task=181 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   3.8/22.6    423     0
+[sched] 16:59:07 finish task=529 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   2.8/22.6    306     0
+[sched] 16:59:08 finish task=242 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   2.2/22.6    247     0
+[sched] 16:59:09 finish task=339 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   0.3/22.6     31     0
+[blocking-operator] start operator=SemAgg position=2 input_tuples=248
+[blocking-operator] done operator=SemAgg position=2 input_tuples=248 output_tuples=1 elapsed_seconds=14.138
+len(out)1
+[QueryProcessor] QUERY_KV_STATS {"decode_time_seconds": 690.1972874139997, "decode_tokens": 9118, "elapsed_seconds": 22.44231812999999, "inference_time_seconds": 985.7309578480002, "kv_blocks_evicted": 0, "kv_eviction_metric_available": false, "llm_work_metrics_available": true, "preemptions": 0, "prefill_time_seconds": 295.5336704340003, "prefill_tokens_computed": 115538, "prefix_hit_fraction": 0.24363355460413474, "prefix_tokens_computed_on_miss": 115538, "prefix_tokens_queried": 152754, "prefix_tokens_reused": 37216, "prompt_tokens": 152754, "query_id": "query-5e03ab3f8d5147a5aa37d2c283b003f9", "scope": "process_delta"}
+INFO:     127.0.0.1:22402 - "POST /v1/semantic/query HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1378]

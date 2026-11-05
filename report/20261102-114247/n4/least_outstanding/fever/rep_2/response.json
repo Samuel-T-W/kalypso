@@ -1,0 +1,54 @@
+{
+  "request_id": "87cc5cd9f73e4943a701981798820901",
+  "model_name": "Qwen/Qwen2.5-7B-Instruct",
+  "data_path": "/__modal/volumes/vo-7hGjpVtYycANzICxhOqj3X/20261102-114247/n4/data/fever/input/input.csv",
+  "ops": [
+    {
+      "op": "sem_filter",
+      "args": {
+        "prompt": "Is this claim about a specific person, place or work? Reply with only true or false."
+      }
+    },
+    {
+      "op": "sem_map",
+      "args": {
+        "prompt": "Answer SUPPORTED or REFUTED from general knowledge, with a one-sentence reason."
+      }
+    },
+    {
+      "op": "sem_agg",
+      "args": {
+        "instruction": "Summarize the most common reasons claims were refuted."
+      }
+    }
+  ],
+  "blocking": false,
+  "num_output_rows": 1,
+  "latency_sec": 28.402,
+  "results": [
+    {
+      "idx": -1,
+      "worker": null,
+      "input_context": [
+        {
+          "role": "user",
+          "type": "text",
+          "content": "CONTEXT:\n  {\n    \"text\": - Incorrect historical dates\n- Misattributed roles or positions\n- Misidentified individuals or characters\n- Misstated facts about public figures\n- Incorrect biographical information\n- Misattribution of works\n- Misidentification of locations\n- Misrepresentation of historical facts\n- Misunderstanding of professional careers\n- Incorrect geographical information\n- Misattributed profession\n- Misstated historical or biographical facts\n- Misidentified individuals or entities\n- Lack of evidence or verification for the claim\n- Conflicting historical records\n- Misinterpretation of the claim's context\n- The claim is based on outdated or incorrect information\n- The claimant was not associated with the subject\n- The claimant did not perform the stated action\n- The claimant was not involved in the stated activity\n  }\n"
+        }
+      ],
+      "right_input_context": [],
+      "outputs": [
+        {
+          "op": "<class 'vllm.kalypso.sem_ops.reducers.SemAgg'>",
+          "value": [
+            {
+              "role": "user",
+              "type": "text",
+              "content": "CONTEXT:\n  {\n    \"text\": - Incorrect historical dates\n- Misattributed roles or positions\n- Misidentified individuals or characters\n- Misstated facts about public figures\n- Incorrect biographical information\n- Misattribution of works\n- Misidentification of locations\n- Misrepresentation of historical facts\n- Misunderstanding of professional careers\n- Incorrect geographical information\n- Misattributed profession\n- Misstated historical or biographical facts\n- Misidentified individuals or entities\n- Lack of evidence or verification for the claim\n- Conflicting historical records\n- Misinterpretation of the claim's context\n- The claim is based on outdated or incorrect information\n- The claimant was not associated with the subject\n- The claimant did not perform the stated action\n- The claimant was not involved in the stated activity\n  }\n"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

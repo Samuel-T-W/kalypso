@@ -1,0 +1,103 @@
+INFO:     Started server process [2650]
+INFO:     Waiting for application startup.
+[WorkerPool] http://127.0.0.1:8102 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8100 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8101 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8103 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[Coordinator] 4 workers, model=Qwen/Qwen2.5-7B-Instruct, policy=row_affinity, records=/__modal/volumes/vo-7hGjpVtYycANzICxhOqj3X/20261102-114247/n4/row_affinity/medec/rep_3/requests.jsonl
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:26361 - "GET /v1/semantic/healthz HTTP/1.1" 200 OK
+[1] PIPELINE
+  (1) STAGE stage_id=1 behavior=TUPLE_INDEPENDENT ops=['SemFilter', 'SemMap', 'SemMap'] fanout=None
+[sched] 17:35:31 start task=100 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   0.0/5.7       1   299
+    1      w1   0.0/5.7       0   299
+    1      w2   0.0/5.7       0   299
+    1      w3   0.0/5.7       0   299
+[sched] 17:35:33 finish task=100 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   4.3/5.7      74     0
+    1      w1   4.4/5.7      75     0
+    1      w2   4.5/5.7      75     0
+    1      w3   4.3/5.7      75     0
+[sched] 17:35:34 finish task=128 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   4.2/5.7      73     0
+    1      w1   4.4/5.7      74     0
+    1      w2   4.3/5.7      72     0
+    1      w3   4.0/5.7      70     0
+[sched] 17:35:36 finish task=169 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   4.2/5.7      72     0
+    1      w1   4.3/5.7      72     0
+    1      w2   4.2/5.7      68     0
+    1      w3   3.9/5.7      67     0
+[sched] 17:35:37 finish task=206 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   3.9/5.7      66     0
+    1      w1   4.2/5.7      71     0
+    1      w2   4.0/5.7      64     0
+    1      w3   3.6/5.7      61     0
+[sched] 17:35:38 finish task=244 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   3.7/5.7      61     0
+    1      w1   3.9/5.7      65     0
+    1      w2   3.9/5.7      62     0
+    1      w3   3.5/5.7      60     0
+[sched] 17:35:39 finish task=287 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   3.6/5.7      59     0
+    1      w1   3.8/5.7      63     0
+    1      w2   3.7/5.7      59     0
+    1      w3   3.3/5.7      55     0
+[sched] 17:35:40 finish task=316 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   3.5/5.7      57     0
+    1      w1   3.6/5.7      58     0
+    1      w2   3.4/5.7      54     0
+    1      w3   3.1/5.7      52     0
+[sched] 17:35:41 finish task=334 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   3.2/5.7      53     0
+    1      w1   3.3/5.7      55     0
+    1      w2   3.1/5.7      50     0
+    1      w3   2.9/5.7      48     0
+[sched] 17:35:42 finish task=384 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   3.0/5.7      48     0
+    1      w1   3.2/5.7      52     0
+    1      w2   3.1/5.7      49     0
+    1      w3   2.8/5.7      45     0
+[sched] 17:35:43 finish task=112 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   2.8/5.7      45     0
+    1      w1   3.2/5.7      52     0
+    1      w2   3.0/5.7      47     0
+    1      w3   2.7/5.7      44     0
+[sched] 17:35:44 finish task=382 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   0.6/5.7       9     0
+    1      w1   1.6/5.7      26     0
+    1      w2   2.2/5.7      35     0
+    1      w3   0.5/5.7       9     0
+[sched] 17:35:45 finish task=148 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   0.3/5.7       4     0
+    1      w1   0.5/5.7       8     0
+    1      w2   0.6/5.7       9     0
+    1      w3   0.0/5.7       1     0
+[sched] 17:35:47 finish task=359 stage=1
+stage  worker   used/cap GB inflt  wait
+    1      w0   0.0/5.7       0     0
+    1      w1   0.1/5.7       1     0
+    1      w2   0.1/5.7       1     0
+    1      w3   0.0/5.7       0     0
+len(out)189
+[QueryProcessor] QUERY_KV_STATS {"decode_time_seconds": 544.3388720531366, "decode_tokens": 6770, "elapsed_seconds": 17.101115115000084, "inference_time_seconds": 836.5321604031196, "kv_blocks_evicted": 0, "kv_eviction_metric_available": false, "llm_work_metrics_available": true, "preemptions": 0, "prefill_time_seconds": 292.193288350034, "prefill_tokens_computed": 220045, "prefix_hit_fraction": 0.5137567645804468, "prefix_tokens_computed_on_miss": 220045, "prefix_tokens_queried": 452541, "prefix_tokens_reused": 232496, "prompt_tokens": 452541, "query_id": "query-853094179477472a9f234f84e4c0a99d", "scope": "process_delta"}
+INFO:     127.0.0.1:28048 - "POST /v1/semantic/query HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [2650]

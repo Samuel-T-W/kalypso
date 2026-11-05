@@ -1,0 +1,589 @@
+INFO:     Started server process [1490]
+INFO:     Waiting for application startup.
+[WorkerPool] http://127.0.0.1:8101 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8102 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8103 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8100 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[Coordinator] 4 workers, model=Qwen/Qwen2.5-7B-Instruct, policy=cost_aware, records=/__modal/volumes/vo-7hGjpVtYycANzICxhOqj3X/20261102-154922/n4/cost_aware/contract_nli/rep_1/requests.jsonl
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:43023 - "GET /v1/semantic/healthz HTTP/1.1" 200 OK
+[1] PIPELINE
+  (1) STAGE stage_id=1 behavior=TUPLE_INDEPENDENT ops=['SemFilter'] fanout=CartesianProduct
+  (2) STAGE stage_id=2 behavior=TUPLE_INDEPENDENT ops=['SemFilter', 'SemMap'] fanout=None
+[sched] 20:58:28 rebalance
+stage  worker   used/cap GB inflt  wait
+    1       -   0.0/1.6       0   200
+    2       -   0.0/21.0      0     0
+[sched] 20:58:29 finish task=203 stage=1 deferred_release=True
+stage  worker   used/cap GB inflt  wait
+    1       -   1.6/1.6      10   189  FULL
+    2       -   0.0/21.0      0    17
+[sched] 20:58:30 finish task=206 stage=1 deferred_release=True
+stage  worker   used/cap GB inflt  wait
+    1       -   1.5/1.6       5   189  FULL
+    2       -   8.4/21.1     85    17
+[sched] 20:58:32 finish task=492 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   1.5/1.5       0   189  FULL
+    2       -  20.9/21.1    147    37  FULL
+[sched] 20:58:33 start task=228 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   3.3/3.4      18   171  FULL
+    2       -  19.2/19.2    159     0
+[sched] 20:58:34 finish task=459 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   6.1/6.3      45   144  FULL
+    2       -  16.1/16.3    130     0
+[sched] 20:58:35 finish task=475 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   8.0/8.1      56   133  FULL
+    2       -  14.4/14.5    108     0
+[sched] 20:58:36 finish task=521 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.2     85   104  FULL
+    2       -  11.2/11.5     86     0
+[sched] 20:58:37 finish task=532 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.3/11.3     86   103  FULL
+    2       -   5.2/11.3     59     0
+[sched] 20:58:39 finish task=217 stage=1 deferred_release=True
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3     82   100  FULL
+    2       -   5.3/11.4    138    17
+[sched] 20:58:40 start task=841 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.2     71   100  FULL
+    2       -   6.6/11.4    304    37
+[sched] 20:58:41 start task=922 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.2     66   100  FULL
+    2       -   7.3/11.4    379    41
+[sched] 20:58:42 start task=997 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.1     59   100  FULL
+    2       -   8.0/11.5    449    85
+[sched] 20:58:43 finish task=485 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.1     59   100  FULL
+    2       -   8.7/11.5    533     0
+[sched] 20:58:44 start task=1249 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.1     45   100  FULL
+    2       -  10.1/11.5    696    73
+[sched] 20:58:45 finish task=255 stage=1 deferred_release=True
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.1     44   100  FULL
+    2       -  10.7/11.5    769    17  FULL
+[sched] 20:58:46 start task=1423 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.0/11.0     33   100  FULL
+    2       -  11.6/11.6    859   103  FULL
+[sched] 20:58:47 finish task=296 stage=1 deferred_release=True
+stage  worker   used/cap GB inflt  wait
+    1       -  11.0/11.0     24   100  FULL
+    2       -  11.6/11.6    876   219  FULL
+[sched] 20:58:48 finish task=1326 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.9/10.9     15   100  FULL
+    2       -  11.7/11.7    885   326  FULL
+[sched] 20:58:49 finish task=286 stage=1 deferred_release=True
+stage  worker   used/cap GB inflt  wait
+    1       -  10.9/10.9     11   100  FULL
+    2       -  11.7/11.7    870   381  FULL
+[sched] 20:58:50 finish task=888 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.9/10.9      9   100  FULL
+    2       -  11.7/11.7    863   411  FULL
+[sched] 20:58:52 finish task=1454 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.9/10.9      7   100  FULL
+    2       -  11.7/11.7    872   411  FULL
+[sched] 20:58:53 start task=1600 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.8/10.8      3   100  FULL
+    2       -  11.7/11.8    886   421  FULL
+[sched] 20:58:54 finish task=290 stage=1 deferred_release=True
+stage  worker   used/cap GB inflt  wait
+    1       -  10.8/10.8      0   100  FULL
+    2       -  11.8/11.8    896   445  FULL
+[sched] 20:58:55 finish task=640 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.8/10.8      0   100  FULL
+    2       -  11.8/11.8    912   431  FULL
+[sched] 20:58:56 start task=1690 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.8/10.8      0   100  FULL
+    2       -  11.8/11.9    913   417  FULL
+[sched] 20:58:57 finish task=1344 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.7/10.7      0   100  FULL
+    2       -  11.9/11.9    910   393  FULL
+[sched] 20:58:58 finish task=805 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.5/10.5      0   100  FULL
+    2       -  12.1/12.1    934   353  FULL
+[sched] 20:58:59 start task=1808 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.4/10.4      0   100  FULL
+    2       -  12.1/12.2    945   299  FULL
+[sched] 20:59:00 finish task=1115 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.4/10.4      0   100  FULL
+    2       -  12.2/12.2    944   279  FULL
+[sched] 20:59:01 finish task=1178 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.3/10.3      0   100  FULL
+    2       -  12.3/12.3    971   221  FULL
+[sched] 20:59:02 finish task=1242 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.2/10.2      0   100  FULL
+    2       -  12.4/12.4    973   174  FULL
+[sched] 20:59:03 finish task=1288 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.2/10.2      0   100  FULL
+    2       -  12.4/12.4    956   154  FULL
+[sched] 20:59:04 finish task=1300 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.1/10.1      0   100  FULL
+    2       -  12.5/12.5    963   117  FULL
+[sched] 20:59:05 start task=2049 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.0/10.0      0   100  FULL
+    2       -  12.6/12.6    985    67  FULL
+[sched] 20:59:07 finish task=1000 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.0/10.0      0   100  FULL
+    2       -  12.6/12.6    974    48  FULL
+[sched] 20:59:08 finish task=1008 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.0/10.0      0   100  FULL
+    2       -  12.6/12.6    966    28  FULL
+[sched] 20:59:09 finish task=1072 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   9.9/9.9       0   100  FULL
+    2       -  12.7/12.7    963     0
+[sched] 20:59:10 finish task=768 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.1/10.2      1    98  FULL
+    2       -  12.4/12.4    931     0
+[sched] 20:59:11 finish task=906 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.4/10.5      3    96  FULL
+    2       -  12.1/12.1    903     0
+[sched] 20:59:12 finish task=572 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.8/10.8      7    89  FULL
+    2       -  11.8/11.8    872     0
+[sched] 20:59:13 finish task=953 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.9/11.0      7    88  FULL
+    2       -  11.6/11.6    857     3  FULL
+[sched] 20:59:14 finish task=789 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.0/11.0      8    86  FULL
+    2       -  11.6/11.6    841    11  FULL
+[sem-map] retry-trigger stage=2 position=2 request_id=chatcmpl-94ff63272f400f1c pin_req_id=None from_max_tokens=37 to_max_tokens=1024 input_tokens=447
+[sched] 20:59:15 start task=2240 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.0/11.0      6    83  FULL
+    2       -  11.5/11.6    819    17  FULL
+[sched] 20:59:16 finish task=1369 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.2      7    81  FULL
+    2       -  11.4/11.4    807     0
+[sched] 20:59:17 start task=2315 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.3/11.3      7    79  FULL
+    2       -  11.3/11.3    800     4  FULL
+[sched] 20:59:18 finish task=1343 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      7    78  FULL
+    2       -  10.9/11.3    757     0
+[sched] 20:59:19 finish task=1501 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.3/11.3      6    77  FULL
+    2       -  10.8/11.3    744     0
+[sched] 20:59:20 finish task=1767 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      5    77  FULL
+    2       -  10.5/11.3    718     0
+[sched] 20:59:21 finish task=1522 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      4    76  FULL
+    2       -  10.2/11.3    702     0
+[sched] 20:59:23 finish task=1543 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      4    76  FULL
+    2       -  10.0/11.3    684     0
+[sched] 20:59:24 finish task=538 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.3      3    75  FULL
+    2       -   9.7/11.3    667     0
+[sched] 20:59:25 finish task=1621 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.3/11.3      6    69  FULL
+    2       -   9.4/11.3    660     0
+[sched] 20:59:26 finish task=1701 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.3/11.3      6    69  FULL
+    2       -   9.2/11.3    644     0
+[sched] 20:59:27 finish task=1625 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      6    66  FULL
+    2       -   8.8/11.3    618     0
+[sched] 20:59:28 finish task=928 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      6    65  FULL
+    2       -   8.5/11.3    597     0
+[sched] 20:59:29 start task=2451 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.2      3    65  FULL
+    2       -   8.4/11.5    596    15
+[sched] 20:59:30 finish task=1634 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      2    65  FULL
+    2       -   8.2/11.3    596     0
+[sched] 20:59:31 finish task=1873 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      2    63  FULL
+    2       -   8.1/11.3    579     0
+[sched] 20:59:33 finish task=2457 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      0    63  FULL
+    2       -   8.0/11.3    576     0
+[sched] 20:59:34 finish task=1883 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.3/11.3      1    61  FULL
+    2       -   7.7/11.3    555     0
+[sched] 20:59:35 finish task=1267 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      0    61  FULL
+    2       -   7.4/11.3    534     0
+[sched] 20:59:36 finish task=1077 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.3      0    61  FULL
+    2       -   7.2/11.3    516     0
+[sched] 20:59:37 finish task=1689 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.3      0    61  FULL
+    2       -   6.8/11.3    494     0
+[sched] 20:59:38 finish task=1870 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.3      1    59  FULL
+    2       -   6.0/11.3    451     0
+[sched] 20:59:39 finish task=1816 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.3      0    59  FULL
+    2       -   5.6/11.3    430     0
+[sched] 20:59:40 finish task=1609 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.0/11.3      0    59  FULL
+    2       -   5.4/11.3    419     0
+[sched] 20:59:41 finish task=1060 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.3/11.3      0    58  FULL
+    2       -   5.0/11.3    388     0
+[sched] 20:59:43 finish task=2314 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      0    58  FULL
+    2       -   4.7/11.3    363     0
+[sched] 20:59:44 finish task=1940 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.3      0    58  FULL
+    2       -   4.4/11.3    342     0
+[sched] 20:59:45 finish task=2036 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.3      0    58  FULL
+    2       -   4.0/11.3    311     0
+[sched] 20:59:46 finish task=2057 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.3/11.3      3    54  FULL
+    2       -   3.6/11.3    276     0
+[sched] 20:59:47 finish task=1372 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      2    54  FULL
+    2       -   3.3/11.3    249     0
+[sched] 20:59:48 start task=2673 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.2      0    52  FULL
+    2       -   3.6/11.4    261     2
+[sched] 20:59:49 start task=2700 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.1      0    52  FULL
+    2       -   4.1/11.5    272    28
+[sched] 20:59:50 finish task=2382 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.1      0    52  FULL
+    2       -   5.4/11.5    359     0
+[sched] 20:59:51 finish task=2389 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      0    50  FULL
+    2       -   5.4/11.3    363     0
+[sched] 20:59:52 start task=2882 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.2      0    50  FULL
+    2       -   6.0/11.4    387    33
+[sched] 20:59:53 start task=2956 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.9/10.9      0    50  FULL
+    2       -   7.2/11.7    445    14
+[sched] 20:59:54 finish task=2737 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.9/10.9      0    50  FULL
+    2       -   8.4/11.7    518     0
+[sched] 20:59:55 finish task=2533 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.3/11.3      4    45  FULL
+    2       -   9.4/11.3    564     0
+[sched] 20:59:56 finish task=2843 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      2    43  FULL
+    2       -  10.1/11.3    600     0
+[sched] 20:59:57 finish task=2666 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.2      0    43  FULL
+    2       -  10.9/11.4    640     0
+[sched] 20:59:59 finish task=1836 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      4    35  FULL
+    2       -  10.7/11.3    627     0
+[sched] 21:00:00 finish task=3240 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      1    33  FULL
+    2       -  10.9/11.3    633     0
+[sched] 21:00:01 finish task=2653 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.2      0    33  FULL
+    2       -  11.4/11.4    615     4  FULL
+[sched] 21:00:02 finish task=1667 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.3      2    28  FULL
+    2       -  10.7/11.3    565     0
+[sched] 21:00:03 finish task=2714 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.3/11.3      3    27  FULL
+    2       -  10.1/11.3    533     0
+[sched] 21:00:04 finish task=2790 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      5    22  FULL
+    2       -   9.7/11.3    513     0
+[sched] 21:00:06 finish task=2813 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.2      5    17  FULL
+    2       -   9.4/11.4    500     0
+[sched] 21:00:07 finish task=348 stage=1 deferred_release=True
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.3      3    17  FULL
+    2       -   8.9/11.3    463    17
+[sched] 21:00:08 finish task=2864 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      3     8  FULL
+    2       -   9.0/11.3    473     0
+[sched] 21:00:09 finish task=2117 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.3      1     7  FULL
+    2       -   8.8/11.3    467     0
+[sched] 21:00:10 finish task=2923 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.3/11.3      0     5  FULL
+    2       -   8.6/11.3    470     0
+[sched] 21:00:11 start task=3520 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.2      0     5  FULL
+    2       -   8.2/11.4    444     8
+[sched] 21:00:12 finish task=2818 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.3      0     5  FULL
+    2       -   7.9/11.3    430     0
+[sched] 21:00:13 start task=3575 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.1/11.1      0     5  FULL
+    2       -   7.6/11.5    417    16
+[sched] 21:00:14 finish task=3535 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.3/11.3      2     2  FULL
+    2       -   8.2/11.3    481     0
+[sched] 21:00:15 start task=3686 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  11.2/11.2      0     2  FULL
+    2       -   7.9/11.4    469     1
+[sched] 21:00:16 finish task=2875 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.8/11.3      0     0
+    2       -   7.5/11.3    446     0
+[sched] 21:00:17 finish task=3076 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.7/10.7      0     0
+    2       -   7.6/12.0    458     0
+[sched] 21:00:19 finish task=3150 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.7/10.7      0     0
+    2       -   6.9/12.0    415     0
+[sched] 21:00:20 start task=3756 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.5/10.5      0     0
+    2       -   7.1/12.1    407     5
+[sched] 21:00:21 start task=3785 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.3/10.3      0     0
+    2       -   7.0/12.3    403    15
+[sched] 21:00:22 start task=3863 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.1/10.1      0     0
+    2       -   7.6/12.5    457    13
+[sched] 21:00:23 start task=3943 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -  10.1/10.1      0     0
+    2       -   8.7/12.6    516     5
+[sched] 21:00:24 finish task=2394 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   9.7/9.8       0     0
+    2       -   9.0/12.8    537     0
+[sched] 21:00:25 start task=4077 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   9.6/9.6       0     0
+    2       -   9.8/13.0    588    10
+[sched] 21:00:26 finish task=3403 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   9.3/9.6       0     0
+    2       -   9.2/13.0    555     0
+[sched] 21:00:27 finish task=3030 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   9.1/9.6       0     0
+    2       -   8.3/13.0    523     0
+[sched] 21:00:28 finish task=3327 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   9.1/9.1       0     0
+    2       -   9.0/13.5    531     0
+[sched] 21:00:29 finish task=3468 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   9.1/9.1       0     0
+    2       -   9.4/13.5    552     0
+[sched] 21:00:30 finish task=385 stage=1 deferred_release=True
+stage  worker   used/cap GB inflt  wait
+    1       -   9.1/9.1       0     0
+    2       -  10.1/13.5    576    17
+[sched] 21:00:31 start task=4258 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   9.1/9.1       0     0
+    2       -  11.7/13.5    611     3
+[sched] 21:00:33 finish task=3661 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   9.1/9.1       0     0
+    2       -  11.4/13.5    580     0
+[sched] 21:00:34 start task=4333 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   8.8/8.8       0     0
+    2       -  12.4/13.8    615     5  FULL
+[sched] 21:00:35 finish task=3719 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   8.7/8.8       0     0
+    2       -  12.8/13.8    621     0
+[sched] 21:00:36 finish task=3550 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   8.2/8.8       0     0
+    2       -  12.3/13.8    585     0
+[sched] 21:00:37 finish task=3790 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   8.1/8.1       0     0
+    2       -  12.3/14.5    582     0
+[sched] 21:00:38 finish task=3827 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   8.0/8.0       0     0
+    2       -  12.0/14.6    561     0
+[sched] 21:00:39 finish task=3892 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   7.9/7.9       0     0
+    2       -  11.5/14.7    522     0
+[sched] 21:00:40 finish task=3921 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   7.8/7.8       0     0
+    2       -  11.1/14.8    500     0
+[sched] 21:00:41 finish task=3979 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   7.8/7.8       0     0
+    2       -  10.8/14.8    481     0
+[sched] 21:00:42 finish task=3846 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   7.5/7.5       0     0
+    2       -  10.2/15.1    445     0
+[sched] 21:00:43 finish task=4030 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   7.5/7.5       0     0
+    2       -   9.6/15.1    410     0
+[sched] 21:00:44 finish task=4057 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   7.5/7.5       0     0
+    2       -   9.0/15.1    374     0
+[sched] 21:00:45 finish task=4058 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   7.4/7.4       0     0
+    2       -   8.7/15.2    357     0
+[sched] 21:00:47 finish task=4153 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   7.2/7.2       0     0
+    2       -   8.3/15.4    334     0
+[sched] 21:00:48 finish task=3428 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   7.0/7.0       0     0
+    2       -   8.0/15.6    319     0
+[sched] 21:00:49 finish task=4143 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   6.6/6.6       0     0
+    2       -   7.4/16.0    298     0
+[sched] 21:00:50 finish task=4127 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   6.6/6.6       0     0
+    2       -   6.9/16.0    281     0
+[sched] 21:00:51 finish task=3624 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   6.3/6.3       0     0
+    2       -   6.3/16.3    252     0
+[sched] 21:00:52 finish task=2884 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   6.0/6.1       0     0
+    2       -   5.8/16.5    227     0
+[sched] 21:00:53 finish task=4219 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   6.0/6.0       0     0
+    2       -   5.2/16.6    208     0
+[sched] 21:00:54 finish task=4286 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   5.9/5.9       0     0
+    2       -   4.6/16.7    186     0
+[sched] 21:00:56 finish task=4346 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   5.9/5.9       0     0
+    2       -   4.0/16.7    160     0
+[sched] 21:00:57 finish task=4018 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   5.6/5.6       0     0
+    2       -   3.0/17.0    125     0
+[sched] 21:00:58 finish task=4227 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   4.7/4.7       0     0
+    2       -   1.9/17.9     78     0
+[sched] 21:00:59 finish task=4229 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   3.7/3.7       0     0
+    2       -   0.7/18.9     31     0
+[sched] 21:01:00 finish task=4260 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   1.8/1.9       0     0
+    2       -   0.3/20.7     13     0
+[sched] 21:01:01 finish task=3711 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   0.5/0.5       0     0
+    2       -   0.1/22.1      2     0
+[sched] 21:01:04 finish task=3954 stage=2
+stage  worker   used/cap GB inflt  wait
+    1       -   0.0/0.1       0     0
+    2       -   0.0/22.5      0     0
+len(out)833
+[QueryProcessor] QUERY_KV_STATS {"decode_time_seconds": 13547.812014562027, "decode_tokens": 35366, "elapsed_seconds": 157.64072100199996, "inference_time_seconds": 16233.875344439963, "kv_blocks_evicted": 0, "kv_eviction_metric_available": false, "llm_work_metrics_available": true, "preemptions": 0, "prefill_time_seconds": 2686.0633298780212, "prefill_tokens_computed": 2397513, "prefix_hit_fraction": 0.7360541861579089, "prefix_tokens_computed_on_miss": 2397513, "prefix_tokens_queried": 9083353, "prefix_tokens_reused": 6685840, "prompt_tokens": 9083353, "query_id": "query-4ef644d09f4b41c5a7ad15974e843934", "scope": "process_delta"}
+INFO:     127.0.0.1:57748 - "POST /v1/semantic/query HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1490]

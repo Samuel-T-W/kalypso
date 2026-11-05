@@ -1,0 +1,64 @@
+INFO:     Started server process [1910]
+INFO:     Waiting for application startup.
+[WorkerPool] http://127.0.0.1:8103 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8100 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8101 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8102 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[Coordinator] 4 workers, model=Qwen/Qwen2.5-7B-Instruct, policy=least_outstanding, records=/__modal/volumes/vo-7hGjpVtYycANzICxhOqj3X/20261102-114247/n4/least_outstanding/medec/rep_1/requests.jsonl
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:52482 - "GET /v1/semantic/healthz HTTP/1.1" 200 OK
+[1] PIPELINE
+  (1) STAGE stage_id=1 behavior=TUPLE_INDEPENDENT ops=['SemFilter', 'SemMap', 'SemMap'] fanout=None
+[sched] 17:12:16 start task=100 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   0.0/22.6      1   299
+[sched] 17:12:19 finish task=100 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -  17.4/22.6    299     0
+[sched] 17:12:20 finish task=128 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -  16.9/22.6    289     0
+[sched] 17:12:21 finish task=169 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -  16.5/22.6    279     0
+[sched] 17:12:22 finish task=209 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -  15.7/22.6    261     0
+[sched] 17:12:23 finish task=243 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -  15.0/22.6    247     0
+[sched] 17:12:24 finish task=283 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -  14.4/22.6    236     0
+[sched] 17:12:26 finish task=316 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -  13.6/22.6    221     0
+[sched] 17:12:27 finish task=334 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -  12.6/22.6    206     0
+[sched] 17:12:28 finish task=384 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -  12.0/22.6    194     0
+[sched] 17:12:30 finish task=153 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -  11.7/22.6    188     0
+[sched] 17:12:31 finish task=385 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   5.3/22.6     87     0
+[sched] 17:12:32 finish task=111 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   1.2/22.6     19     0
+[sched] 17:12:33 finish task=356 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   0.2/22.6      3     0
+[sched] 17:12:35 finish task=237 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   0.0/22.6      0     0
+len(out)189
+[QueryProcessor] QUERY_KV_STATS {"decode_time_seconds": 604.066112822984, "decode_tokens": 6816, "elapsed_seconds": 18.842429853, "inference_time_seconds": 908.1618034499916, "kv_blocks_evicted": 0, "kv_eviction_metric_available": false, "llm_work_metrics_available": true, "preemptions": 0, "prefill_time_seconds": 304.0956906269912, "prefill_tokens_computed": 252078, "prefix_hit_fraction": 0.44297324889181555, "prefix_tokens_computed_on_miss": 252078, "prefix_tokens_queried": 452542, "prefix_tokens_reused": 200464, "prompt_tokens": 452542, "query_id": "query-89f698ace8ae4358afd7349c9a550c78", "scope": "process_delta"}
+INFO:     127.0.0.1:29720 - "POST /v1/semantic/query HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1910]

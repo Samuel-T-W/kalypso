@@ -1,0 +1,47 @@
+INFO:     Started server process [1503]
+INFO:     Waiting for application startup.
+[WorkerPool] http://127.0.0.1:8100 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8102 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8101 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[WorkerPool] http://127.0.0.1:8103 ready: model=Qwen/Qwen2.5-7B-Instruct budget=5.7 GB
+[Coordinator] 4 workers, model=Qwen/Qwen2.5-7B-Instruct, policy=round_robin, records=/__modal/volumes/vo-7hGjpVtYycANzICxhOqj3X/20261102-114247/n4/round_robin/fever/rep_2/requests.jsonl
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:51809 - "GET /v1/semantic/healthz HTTP/1.1" 200 OK
+[1] PIPELINE
+  (1) STAGE stage_id=1 behavior=TUPLE_INDEPENDENT ops=['SemFilter', 'SemMap'] fanout=None
+[2] BLOCKING SemAgg
+[sched] 16:59:38 start task=100 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   0.0/22.6      1   499
+[sched] 16:59:39 finish task=101 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   4.5/22.6    499     0
+[sched] 16:59:40 finish task=181 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   3.8/22.6    423     0
+[sched] 16:59:41 finish task=493 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   2.8/22.6    306     0
+[sched] 16:59:42 finish task=242 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   2.2/22.6    247     0
+[sched] 16:59:43 finish task=275 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   0.3/22.6     29     0
+[sem-map] retry-trigger stage=1 position=1 request_id=chatcmpl-89eefeff98d28da3 pin_req_id=None from_max_tokens=69 to_max_tokens=1024 input_tokens=69
+[sched] 16:59:44 retry task=332 stage=1 retain_budget=False
+stage  worker   used/cap GB inflt  wait
+    1       -   0.0/22.6      0     1
+[sched] 16:59:47 finish task=847 stage=1
+stage  worker   used/cap GB inflt  wait
+    1       -   0.0/22.6      0     0
+[blocking-operator] start operator=SemAgg position=2 input_tuples=248
+[blocking-operator] done operator=SemAgg position=2 input_tuples=248 output_tuples=1 elapsed_seconds=10.000
+len(out)1
+[QueryProcessor] QUERY_KV_STATS {"decode_time_seconds": 679.5263290770004, "decode_tokens": 8734, "elapsed_seconds": 19.784333933, "inference_time_seconds": 977.3435516130013, "kv_blocks_evicted": 0, "kv_eviction_metric_available": false, "llm_work_metrics_available": true, "preemptions": 0, "prefill_time_seconds": 297.81722253599867, "prefill_tokens_computed": 115122, "prefix_hit_fraction": 0.2448540505083634, "prefix_tokens_computed_on_miss": 115122, "prefix_tokens_queried": 152450, "prefix_tokens_reused": 37328, "prompt_tokens": 152450, "query_id": "query-d09351fd42734c50b7f151cfb41effbc", "scope": "process_delta"}
+INFO:     127.0.0.1:17127 - "POST /v1/semantic/query HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1503]

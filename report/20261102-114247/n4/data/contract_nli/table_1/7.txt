@@ -1,0 +1,5 @@
+LABEL_ID: nda-7
+SHORT_DESCRIPTION: Sharing with third-parties
+
+HYPOTHESIS:
+Receiving Party may share some Confidential Information with some third-parties (including consultants, agents and professional advisors).

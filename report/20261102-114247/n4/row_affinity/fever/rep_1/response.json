@@ -1,0 +1,54 @@
+{
+  "request_id": "febb707805fc4e6fa57f48968745955f",
+  "model_name": "Qwen/Qwen2.5-7B-Instruct",
+  "data_path": "/__modal/volumes/vo-7hGjpVtYycANzICxhOqj3X/20261102-114247/n4/data/fever/input/input.csv",
+  "ops": [
+    {
+      "op": "sem_filter",
+      "args": {
+        "prompt": "Is this claim about a specific person, place or work? Reply with only true or false."
+      }
+    },
+    {
+      "op": "sem_map",
+      "args": {
+        "prompt": "Answer SUPPORTED or REFUTED from general knowledge, with a one-sentence reason."
+      }
+    },
+    {
+      "op": "sem_agg",
+      "args": {
+        "instruction": "Summarize the most common reasons claims were refuted."
+      }
+    }
+  ],
+  "blocking": false,
+  "num_output_rows": 1,
+  "latency_sec": 16.508,
+  "results": [
+    {
+      "idx": -1,
+      "worker": null,
+      "input_context": [
+        {
+          "role": "user",
+          "type": "text",
+          "content": "CONTEXT:\n  {\n    \"text\": - Incorrect dates\n- Misattribution or incorrect information about individuals' careers or roles\n- Lack of evidence\n- Misunderstanding or misinterpretation of context\n- Contradiction with general knowledge\n- Misidentification of individuals or roles\n- Misidentification of nationalities, professions, historical figures, locations, and events\n  }\n"
+        }
+      ],
+      "right_input_context": [],
+      "outputs": [
+        {
+          "op": "<class 'vllm.kalypso.sem_ops.reducers.SemAgg'>",
+          "value": [
+            {
+              "role": "user",
+              "type": "text",
+              "content": "CONTEXT:\n  {\n    \"text\": - Incorrect dates\n- Misattribution or incorrect information about individuals' careers or roles\n- Lack of evidence\n- Misunderstanding or misinterpretation of context\n- Contradiction with general knowledge\n- Misidentification of individuals or roles\n- Misidentification of nationalities, professions, historical figures, locations, and events\n  }\n"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

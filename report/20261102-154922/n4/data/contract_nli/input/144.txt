@@ -1,0 +1,36 @@
+Reciprocal Confidential Non-Disclosure Agreement
+BETWEEN: ____________________________, of ________________________("the First Party").
+AND: _____________________________, of ____________________________ ("the Second Party").
+The First Party and the Second Party (collectively "the Parties"; individually a "Party") have agreed to exchange oral and written proprietary, financial, operating and other information concerning themselves and/or certain of their operating divisions and/or certain of their subsidiaries, including confidential information which has not been generally disclosed to the public. The Parties wish to use such information in connection with evaluating possible business transactions with each other (individually, a "Transaction").
+DEFINITIONS:
+All information, concerning the business of the other Party, hereafter in the possession of either of the Parties, or their respective directors, officers, employees, agents or representatives, including, without limitation, lawyers, accountants, consultants and financial advisors (collectively, "Representatives") and except as noted hereinafter is considered to be "Confidential Information".
+Furthermore, any specific product or venture ideas, know-how, or concepts which may be discussed are deemed to be Confidential Information, provided that, (i) if in written or electronic form, they are clearly marked "Confidential", or (ii) if otherwise uttered, they are at least verbally noted to the recipient Party by the disclosing Party at the general time of disclosure as being confidential, and that subsequently they are noted in writing within 7 calendar days of the time of disclosure to the recipient Party by the disclosing Party as being a confidential topic.
+The following information is excluded from being considered Confidential Information:
+(i) Information which, at the time of disclosure, is in the public domain, or information which subsequently becomes part of the public domain, by means other than breach of this Agreement.
+(ii) Information which the receiving Party obtains from a third party having a lawful right to disclose said information
+(iii) Information which can be shown by competent written evidence to have been developed by the receiving Party independently of said disclosure.
+(iv) Information which is required to be disclosed to any third party by reason of an applicable law, or by the decision of any court or tribunal having competent jurisdiction, and provided that written and reasonable prior notice has been given to the disclosing Party.
+IT IS HEREBY AGREED:
+1. The Parties will not, and will direct their respective representatives and associates not to, disclose to any other person that the Confidential Information has been made available to them, that discussions or negotiations are taking place concerning a potential Transaction or any of the terms, conditions or other facts with respect to any such Transaction. The term "person" used in this Agreement shall be broadly interpreted to include, without limitation, any individual, corporation, company, group partnership or other entity.
+2. The Parties will (and shall ensure that their respective Representatives will) keep the Confidential Information confidential and will not, without the prior written consent of the other Party, disclose any Confidential Information in any manner whatsoever, in whole or in part, and will not use Confidential Information, directly or indirectly, for other than evaluating a possible Transaction. The Parties shall make all reasonable, necessary or appropriate efforts to safeguard the Confidential Information from disclosure to anyone other than as permitted hereby.
+3. Information or concepts which are discussed by either Party as an extrapolation of the Confidential Information disclosed are the property of the topic's disclosing Party. For greater clarity, the discussion or invention of an extension to Confidential Information does not give the uttering Party intellectual property rights to that aspect of the topic unless the related Confidential Information is theirs.
+4. If either of the Parties determines that it does not wish to be involved in a Transaction, it will promptly advise the other Party of that fact, and if requested, each Party will promptly return to the other Party all documents furnished hereunder to it or its respective Representatives.
+5. Each Party acknowledges and agrees that the other Party would not have an adequate remedy at law and would be irreparably harmed if any of the provisions of this Agreement were not performed in accordance with their specific terms or were otherwise breached. Accordingly, the Parties agree that either Party shall be entitled to injunctive relief to prevent breaches of this Agreement and to specifically enforce the terms and provisions hereof in addition to any other remedy to which it may be entitled at law or in equity.
+6. No failures or delay by either Party in exercising any right, power or privilege under this Agreement shall operate as a waiver thereof nor shall any single or partial exercise thereof preclude any other or future exercise of any right, power or privilege hereunder.
+TERMINATION:
+The obligations stipulated by this agreement shall continue in force for _____ years from the date of signing, unless otherwise extended or superceded by mutual agreement.
+GOVERNANCE:
+This agreement shall be governed and construed in accordance with the laws of the Province of Ontario, Canada.
+Understood and agreed to by:
+________________________________________ __________________________
+Authorized Representative of the First Party. Date
+________________________________________ __________________________
+Authorized Representative of the Second Party. Date
+Minutes of Confidential Information Disclosures.
+Dated: _____________________________, at ___________________________. During a
+meeting between
+_________________________________ of ______________________________, and
+_________________________________ of ______________________________, and
+_________________________________ of ______________________________, being either
+Parties or representatives of Parties who are subject to a Reciprocal Non-disclosure Agreement,
+the following topics were claimed to be "Confidential Information".

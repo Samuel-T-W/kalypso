@@ -1,0 +1,5 @@
+LABEL_ID: nda-4
+SHORT_DESCRIPTION: Limited use
+
+HYPOTHESIS:
+Receiving Party shall not use any Confidential Information for any purpose other than the purposes stated in Agreement.

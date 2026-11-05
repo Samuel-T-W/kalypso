@@ -1,0 +1,26 @@
+ MUTUAL NON-DISCLOSURE AGREEMENT
+This Non-Disclosure Agreement (“Agreement”), effective, _____________________ is between INCENTIA DESIGN SYSTEMS, INC. located at 2620 Augustine Dr., Ste 200 Santa Clara, CA 95054, (“Incentia”), and located at: _________________________________________________ (“Company”).
+1. "Proprietary Information" will include any and all technical, engineering, scientific, financial, marketing and/or competitive information or data, including but not limited to formulas, databases, schematics, circuit designs, cell libraries, processes, know-how, methodologies, inventions, algorithm, techniques, ideas, software, documentation, trade secrets, projections, licenses, marketing and product development plans, and any other information of a similar nature whether disclosed orally or in writing, or through observation, examination or use, specifically:
+SOFTWARE:___________________________________________________________________________________
+Each party agrees to maintain the confidentiality of such Proprietary Information and to not use, disclose, publish or disseminate it in any manner not consistent with this Agreement. In addition to any other remedies, which may be available, Owner shall be entitled to seek injunctive relief to enforce the terms of this Agreement.
+2. “Owner” means the party who discloses Proprietary Information. “Recipient” means the party who receives Proprietary Information of or from the Owner. Owner warrants that it has the right to disclose the Proprietary Information to Recipient. All information is provided "AS IS" without any warranty regarding its accuracy or performance and will remain the property of the Owner and/or its licensors. No license or other rights to Proprietary Information are granted or implied under this Agreement.
+3. The Proprietary Information will be marked by the Owner as confidential at the time of disclosure. If Proprietary Information is disclosed orally, electronically or without any marking, Owner will identify it as confidential at the time of disclosure and will provide a written confirmation to Recipient within thirty days of disclosure that such information is confidential. The parties’ obligations with respect to Proprietary Information shall continue for a period of three (3) years after the termination of this Agreement.
+4. For Proprietary Information received from the disclosing party, the Recipient agrees to:
+a. hold it in confidence with the same degree of care with which it protects its own confidential and proprietary information, but at least reasonable care;
+b. restrict disclosure of it only to its employees, agents and contractors with a need to know basis and advise those persons of their obligations to keep it confidential;
+c. except for the purposes of this Agreement, not copy or duplicate, or knowingly allow anyone else to copy or duplicate it;
+d. not publish, disclose or make available any benchmark or testing results without the written consent of both parties; and
+e. on request or upon termination of this Agreement, promptly return all Proprietary Information in a tangible form or certify that such Proprietary Information is destroyed.
+5. Obligations of parties under this Agreement shall not apply to information which:
+a. was already in the public domain when disclosed; or subsequently falls into the public domain other than through disclosure by the Recipient; or disclosed by the Recipient with the written approval of the Owner;
+b. was already in the possession of or known by the Recipient free of any obligation at the time disclosed to Recipient;
+c. becomes known to the Recipient from a source other than the Owner without breach of this Agreement by the Recipient;
+d. is developed independently by the Recipient without use of the Owner’s Proprietary Information; or
+e. is disclosed pursuant to judicial or governmental order, provided that the Recipient notifies the Owner so that an adequate opportunity is given to respond to such order.
+6. This Agreement will bind both parties’ affiliates, subsidiaries, successors and assigns. Recipient certifies that no Proprietary Information, or any part of it will be exported to any country in violation of the export laws and regulations of the United States government. If any portion of this Agreement is determined to be invalid or unenforceable, the remainder will be in effect. Failure by either party to enforce any provision of this Agreement will not be deemed a waiver of future enforcement of that or any other provision. Any modifications to this Agreement must be made in writing and must be signed by both parties. This Agreement will be governed by the laws of the State of California.
+Company: ____________________________________
+Incentia Design Systems, Inc.
+By: ___________________________________________ By: __________________________________________
+Name: ________________________________________ Name: ________________________________________
+Title: _________________________________________ Title: _________________________________________
+Date: _________________________________________ Date: _________________________________________

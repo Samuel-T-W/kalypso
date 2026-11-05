@@ -1,0 +1,54 @@
+{
+  "request_id": "0115c89977d34b5f95ccae8ab34f2f1d",
+  "model_name": "Qwen/Qwen2.5-7B-Instruct",
+  "data_path": "/__modal/volumes/vo-7hGjpVtYycANzICxhOqj3X/20261102-114247/n4/data/fever/input/input.csv",
+  "ops": [
+    {
+      "op": "sem_filter",
+      "args": {
+        "prompt": "Is this claim about a specific person, place or work? Reply with only true or false."
+      }
+    },
+    {
+      "op": "sem_map",
+      "args": {
+        "prompt": "Answer SUPPORTED or REFUTED from general knowledge, with a one-sentence reason."
+      }
+    },
+    {
+      "op": "sem_agg",
+      "args": {
+        "instruction": "Summarize the most common reasons claims were refuted."
+      }
+    }
+  ],
+  "blocking": false,
+  "num_output_rows": 1,
+  "latency_sec": 21.82,
+  "results": [
+    {
+      "idx": -1,
+      "worker": null,
+      "input_context": [
+        {
+          "role": "user",
+          "type": "text",
+          "content": "CONTEXT:\n  {\n    \"text\": - Incorrect geographical locations\n- Misattributed professions\n- Misstated historical facts\n- Fictional characters making false claims\n- Misattributed achievements or roles\n- Incorrect geographical information\n- Misattributed authorship\n- Misidentified individuals\n- Misattributed roles or positions\n- Misidentified works or media\n- Place of birth or origin incorrect\n- Profession mismatch\n- Historical figure location incorrect\n- Event participation incorrect\n- Language or media localization incorrect\n- Not accurate based on historical facts\n- Not accurate based on known biographical information\n- Not accurate based on known professional information\n- Not accurate based on known artistic or cultural information\n- Person not involved in the specified field\n- Event or fact did not occur\n- Person is known for something different\n- Claim contradicts historical facts\n- Claim is inconsistent with known timelines\n- Claim is factually incorrect\n  }\n"
+        }
+      ],
+      "right_input_context": [],
+      "outputs": [
+        {
+          "op": "<class 'vllm.kalypso.sem_ops.reducers.SemAgg'>",
+          "value": [
+            {
+              "role": "user",
+              "type": "text",
+              "content": "CONTEXT:\n  {\n    \"text\": - Incorrect geographical locations\n- Misattributed professions\n- Misstated historical facts\n- Fictional characters making false claims\n- Misattributed achievements or roles\n- Incorrect geographical information\n- Misattributed authorship\n- Misidentified individuals\n- Misattributed roles or positions\n- Misidentified works or media\n- Place of birth or origin incorrect\n- Profession mismatch\n- Historical figure location incorrect\n- Event participation incorrect\n- Language or media localization incorrect\n- Not accurate based on historical facts\n- Not accurate based on known biographical information\n- Not accurate based on known professional information\n- Not accurate based on known artistic or cultural information\n- Person not involved in the specified field\n- Event or fact did not occur\n- Person is known for something different\n- Claim contradicts historical facts\n- Claim is inconsistent with known timelines\n- Claim is factually incorrect\n  }\n"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

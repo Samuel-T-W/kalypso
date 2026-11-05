@@ -1,0 +1,37 @@
+model: Qwen/Qwen2.5-7B-Instruct
+policies:
+- round_robin
+- least_outstanding
+- cost_aware
+- row_affinity
+workloads:
+- name: fever
+  rows: 500
+  data_root: null
+- name: medec
+  rows: 300
+  data_root: benchmark_multi_kalypso/data/medec
+- name: contract_nli
+  rows: 200
+  data_root: benchmark_multi_kalypso/data/contract_nli
+n_workers:
+- 4
+reps: 3
+reset_prefix_cache: true
+hardware:
+  gpu_type: A10
+vllm:
+  max_model_len: 32768
+  gpu_memory_utilization: 0.95
+  extra_args: []
+instrumentation:
+  record_requests: true
+  poll_interval: 0.5
+  kv_cache_metrics_sample: null
+timeouts:
+  worker_ready_s: 1800
+  coordinator_ready_s: 120
+  query_s: 3600
+map_retry_max_tokens: 1024
+frequency_penalty: 0.0
+repetition_penalty: 1.0

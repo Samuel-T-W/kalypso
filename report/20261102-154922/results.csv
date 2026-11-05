@@ -1,0 +1,5 @@
+commit,workload,requested_rows,rows,n_workers,policy,rep,completion_s,rows_per_s,num_output_rows,status,error,hypotheses
+1db4c335d,contract_nli,200,200,4,round_robin,1,156.01672576,1.2819138398511152,829,ok,,17
+1db4c335d,contract_nli,200,200,4,least_outstanding,1,160.28099764999996,1.2478085545532542,824,ok,,17
+1db4c335d,contract_nli,200,200,4,cost_aware,1,157.85736934800002,1.2669665079689478,833,ok,,17
+1db4c335d,contract_nli,200,200,4,row_affinity,1,96.289283092,2.077074349062389,829,ok,,17

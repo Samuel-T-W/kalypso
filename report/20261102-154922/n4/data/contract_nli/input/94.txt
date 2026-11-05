@@ -1,0 +1,74 @@
+MUTUAL NON-DISCLOSURE AGREEMENT
+This Agreement is made the _______ day of _________________ 201__.
+BETWEEN:
+1. Singapore Pools (Private) Limited, a company incorporated in Singapore and having its registered office at 210 Middle Road, #01-01, Singapore Pools Building, Singapore 188994 of the one part, and
+2. ___________________________________________________ [Name of company], a company incorporated in _____________________ [state country] and having its registered office at ______________________________________________________________________ [state registered office address of company] of the other part,
+each a “Party” and both collectively the “Parties”.
+IT IS HEREBY AGREED AS FOLLOWS:
+1. Purpose.
+1.1 The Parties wish to disclose to each other and to receive from each other from time to time, certain information and ideas considered to be confidential regarding the Parties’ current and future technology and/or projects and/or business plans and/or opportunities in relation to a Request for Proposals (RFP) for Supply, Delivery, Installation and Implementation of Customer Service System (CSS) for Singapore Pools in Tender Reference 2201000050 (hereinafter called the “Purpose”).
+1.2 In consideration of the terms and conditions hereinafter set forth, and other good and valuable consideration, the receipt and sufficiency of which is hereby acknowledged, the Parties hereto mutually agree as set out herein.
+2. Definitions.
+2.1 “Disclosing Party” shall mean the Party disclosing Confidential Information; “Receiving Party” shall mean the Party receiving Confidential Information.
+2.2 “Confidential Information” as used throughout this Agreement herein shall mean any and all trade secrets and any and all data or information not generally known outside of the Disclosing Party, regardless of form, proprietary to or maintained in confidence by the Disclosing Party, including but not limited to any and all data, information, technical data or know-how relating to business plans, contracts, proposals, documents, concepts, discoveries, ideas, inventions, new products, mechanical and electronic designs, title, script, report, analyses, process data, program, any and all form of codes, research, prototype, survey, new technologies, plans of production and publicity, specifications, articles of manufacture, test procedures, schematics, materials, methods, operations, procedures, marketing techniques, marketing plans, strategies, customer files, customer lists, any business, marketing, financial or sales record, data, plan or survey and other business data (whether written or oral, human or machine readable, and howsoever stored), machines, prototypes, designs and drawings(hereinafter collectively called the “Confidential Information”), which is disclosed by the Disclosing Party, directly or indirectly to the Receiving Party or any of it employees or directors, on or after the date hereof.
+2.3 “Affiliates” shall mean any of the Receiving Party’s affiliated, related and/or subsidiary entities, parents and their respective employees, directors, officers and agents.
+3. Access to Confidential Information.
+Access to and release/use of disclosed Confidential Information shall be restricted to those employees, directors and attorneys of the Receiving Party and its Affiliates, which have a need to know the Confidential Information with respect to the Purpose. The Receiving Party shall cause all its Affiliates, employees, directors, officers and agents to be bound by and to comply with all of the terms and conditions herein.
+4. Use of Confidential Information.
+The Receiving Party shall use the same degree of care to protect the secrecy and confidentiality of the Confidential Information as it uses to protect its own confidential information, and in any event use at least a reasonable degree of care in doing so. All Confidential Information furnished by the Disclosing Party to the Receiving Party shall be used solely in connection with the Purpose. Except as otherwise expressly provided herein, the Receiving Party shall not disclose or reproduce, or authorize or permit the use, reproduction or disclosure of any Confidential Information in whole or in part in any manner or to any person, firm, enterprise, organization, corporation or entity, and shall not use any Confidential Information to unfairly compete against or obtain any unfair advantage, benefit or profit from such use.
+5. Non-Disclosure Obligations.
+The obligations imposed upon herein shall not apply to Confidential Information which is:
+5.1 already in the legal possession of the Receiving Party at the date hereof;
+5.2 not, directly or indirectly, made known, divulged, published or publicized by the act of any Party;
+5.3 generally available to the public through no wrongful act of the Receiving Party;
+5.4 independently developed by the Receiving Party;
+5.5 disclosed upon request of the Disclosing Party;
+5.6 received from or provided lawfully by a third party without restriction and breach of this Agreement herein;
+5.7 required by any judicial or governmental authority, provided that the Receiving Party shall take reasonable steps to give the Disclosing Party sufficient prior notice in order to contest any request, requirement or order made by such judicial or governmental authority for the Confidential Information. In any such case, Receiving Party shall disclose only such Confidential Information as is legally required and shall exercise reasonable efforts to obtain confidential treatment for any Confidential Information being disclosed.
+6. Consequences of Disclosure.
+Receiving Party agrees and recognizes that the unauthorized use or disclosure of any Confidential Information may cause irreparable injury to the Disclosing Party. The Parties agree that in that event, damages may not be an adequate remedy for the Disclosing Party, and the Disclosing Party may seek reliefs including but not limited to injunctions and specific performances. The Receiving Party shall notify the Disclosing Party promptly, by written notice, upon discovery of any unauthorized use or disclosure of Confidential Information or any other breach of this Agreement herein. In the event that the Disclosing Party takes legal action against the Receiving Party as a result of a breach of this Agreement, the Disclosing Party shall be entitled to recover from the Receiving Party its legal fees and expenses incurred in connection with such legal action on an indemnity basis in the event that the Disclosing Party prevails in one or more of its claims.
+7. Return of the Confidential Information.
+As soon as reasonably practicable upon request of the Disclosing Party, all Confidential Information made available hereunder, including all documents and other materials embodying Confidential Information and any/all copies thereof, shall be returned to the Disclosing Party.
+8. Non-Assignable.
+The Agreement herein is non-assignable to or for any person, company, employee of other company, organization, formation or corporation in any event except upon prior written consent of the other Party.
+9. No Publicity.
+Neither Party shall make any public statement nor comment on the existence or provisions of this Agreement herein, nor the existence or content of a relationship between the Parties, without the prior written consent of the other Party.
+10. No Licence.
+All rights in and title to the Confidential Information shall remain in the exclusive ownership of the Disclosing Party. Neither the execution and delivery of this Agreement herein, nor the furnishing of any Confidential Information by the Disclosing Party, shall be construed as granting to the Receiving Party, either expressly, by implication, estoppel or otherwise, any licence to use or exploit any Confidential Information other than is expressly permitted hereunder. Further, the Disclosing Party makes no representation or warranty, express or implied, as to the completeness, fairness or accuracy of the Confidential Information.
+11. Validity.
+The Parties agree that the obligations of the Receiving Party under this Agreement shall survive and continue to be in force notwithstanding the termination of this Agreement or the conclusion of any contractual arrangement between the Parties in relation to the Purpose, until such time as the Confidential Information shall come into public domain other than through a breach of the terms of this Agreement, so that the obligations of confidentiality herein no longer apply.
+12. Governing Law.
+The Agreement herein shall be governed by the laws of Singapore, and the Parties submit to the non-exclusive jurisdiction of the courts of Singapore.
+13. No Implied Obligations.
+Neither this Agreement herein, nor the disclosure of any Confidential Information, shall imply any promise or confirm any intention to enter into any contract or other business relationship, or to purchase any product(s) or service(s), by either of the Parties or any of their affiliated companies, or any commitment by either of the Parties or their affiliated companies with respect to the present or future development, production, or distribution of any product(s) or service(s). Nothing in this Agreement herein shall be construed to refrain either Party from pursuing its business even if this involves or has the effect of competing with the other Party.
+14. Entire Agreement.
+This Agreement herein constitutes the entire agreement between the Parties with respect to the subject matter of this Agreement herein, and supersedes any and all prior or contemporaneous oral or written representations relating thereto.
+15. General Provisions.
+15.1 Any notices required by this Agreement herein shall be in writing and shall be given by hand or sent by first class mail to the applicable address noted in the initial paragraph.
+15.2 If any term or provision of this Agreement herein shall be held illegal or unenforceable, it is to that extent omitted and the validity or enforceability of the remainder of this Agreement herein shall not be affected.
+15.3 Nothing contained herein shall be construed to create a partnership or joint venture between the Parties.
+15.4 No failure or delay by either Party and/or its related corporations in exercising any right, power or remedy under this Agreement shall operate as a waiver thereof nor shall any single or partial exercise of such right, power or remedy preclude any further or other exercise of any right, power or remedy. No waiver by either Party and/or its related corporations of any breach of this Agreement shall be deemed to be a waiver of any subsequent or other breach.
+16. Data Protection.
+The Supplier shall comply with all relevant sections of the Personal Data Protection Act 2012 which may apply to this Agreement.
+IN WITNESS WHEREOF, the Parties have set their hands the day and year first above written.
+SIGNED BY
+FOR AND ON BEHALF OF
+SINGAPORE POOLS (PRIVATE) LIMITED
+___________________________________________________
+[Name and Designation/Appointment]
+IN PRESENCE OF:
+___________________________________________________
+(Name, Signature and Designation of Witness)
+SIGNED BY
+FOR AND ON BEHALF OF
+____________________________________________________
+(Name and Address of Supplier’s Company)
+____________________________________________________
+(Supplier’s Company Stamp)
+Name and Signature:
+Title of Signatory:
+Tel No. and Fax No.:
+Date:
+IN PRESENCE OF:
+___________________________________________________
+(Name, Signature and Designation of Witness)
